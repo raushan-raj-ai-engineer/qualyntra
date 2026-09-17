@@ -49,3 +49,7 @@ See `docs/00-START-HERE.md` first.
 ## Enterprise governance
 
 Qualyntra includes tenant-scoped RBAC, evidence-backed release policies, tamper-evident audit records, secret references, and vendor-neutral integration contracts. See `docs/22-ENTERPRISE-GOVERNANCE.md`.
+
+## Control Plane API
+
+Qualyntra includes a versioned `/api/v1` control plane with bearer authentication, tenant-scoped RBAC, idempotent run creation, governance/release endpoints, rate limits, safe errors, and storage-neutral repositories. See `docs/23-CONTROL-PLANE-API.md`.

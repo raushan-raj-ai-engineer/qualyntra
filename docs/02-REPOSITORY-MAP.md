@@ -42,3 +42,6 @@ Author: Raushan Raj
 
 - `packages/governance/`: RBAC, tenancy, audit, release policy and governance orchestration.
 - `packages/integrations/`: vendor-neutral integration orchestration over registered adapters.
+
+- `packages/control-plane/` - versioned authenticated tenant-aware REST API, repository contracts, rate limiting, and server factory.
+- `schemas/control-plane-api.openapi.json` - machine-readable `/api/v1` contract.

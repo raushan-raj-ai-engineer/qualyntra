@@ -32,3 +32,7 @@ The v1.0 codebase establishes extension points but production SaaS/on-prem distr
 
 These are productization work items, not hidden assumptions. See `10-COMMERCIAL-READINESS.md`.
 
+
+## Control-plane API
+
+Protected `/api/v1` routes require authentication, explicit tenant context, and governance RBAC. The bootstrap bearer token is environment-supplied; production identity remains replaceable by an OIDC/SSO authenticator. API requests are body-limited, rate-limited, correlation-tagged, and returned through stack-free error envelopes. Raw run environment values are rejected in favor of secret references.
