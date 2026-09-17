@@ -28,6 +28,7 @@ Qualyntra is intentionally designed so the **platform kernel does not depend on 
 - Playwright compatibility/certification policy so future Playwright releases can be qualified without changing platform core.
 - Security defaults: network egress opt-in, secrets from environment only, redaction utility, audit events, no credential persistence, and vendor-neutral OIDC/JWKS enterprise bearer authentication with tenant-aware claim mapping.
 - Vendor-neutral correlated observability with tenant-scoped metric alerts and adapter-based webhook/Slack/Teams/email notifications.
+- Standalone tenant-scoped execution agent with remote leases, isolated workspaces, ephemeral secret resolution, artifact upload, telemetry, graceful drain and non-root container packaging.
 - Architecture/header/hardcoding/schema/compatibility audits and release validation.
 
 ## Local validation
@@ -73,6 +74,9 @@ Qualyntra stores screenshots, traces, videos, logs, reports, and AI/test evidenc
 
 ## Dashboard foundation
 Qualyntra now includes a responsive TypeScript product dashboard served behind a same-origin BFF. Browser code never receives platform service/vendor credentials; server-side session resolvers authenticate proxied `/api/v1` requests. See `docs/29-DASHBOARD-FOUNDATION.md`.
+
+Qualyntra also includes a deployable execution-agent foundation that connects to the Control Plane through authenticated worker APIs rather than queue/database internals. See `docs/31-EXECUTION-AGENT-PACKAGING.md`.
+The bundled Control Plane composition remains a reference/local deployment for distributed queue state and artifact metadata catalog state; production durable implementations plug in behind the same contracts.
 
 
 ## Observability and notifications

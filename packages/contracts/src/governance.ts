@@ -15,6 +15,7 @@ export interface TenantScope {
 export type GovernancePermission=
   |'platform.read'
   |'execution.run'
+  |'execution.worker'
   |'results.ingest'
   |'evaluation.run'
   |'governance.read'

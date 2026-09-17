@@ -17,7 +17,7 @@ Author: Raushan Raj
 - Multi-judge consensus and calibration datasets.
 - Prompt-injection/red-team/security suites.
 - Expand the implemented vendor-neutral observability contracts with OTLP/OpenTelemetry exporters, durable telemetry backends, SLOs and richer dashboard visualizations.
-- Kubernetes/distributed execution agent.
+- Expand the implemented standalone distributed execution agent with durable queue backends, signed adapter bundles, SCM workspace materialization, stronger OS/process sandboxing, Kubernetes manifests/operators and autoscaling signals.
 - Signed plugin marketplace/adapter SDK packaging.
 - Continue enterprise identity with browser BFF/PKCE and optional SAML/SCIM; RBAC/tenancy and OIDC/JWT API identity are implemented foundations. Add KMS/BYOK, audit retention and formal compliance controls.
 - Package publishing for TypeScript/Python/Java/.NET SDKs.
