@@ -50,3 +50,5 @@ Author: Raushan Raj
 
 - `packages/persistence` - vendor-neutral persistence errors and repository conformance.
 - `adapters/persistence/postgres` - optional PostgreSQL driver, repositories, audit store, health checks, and migrations.
+
+- `packages/distributed/`: vendor-neutral distributed job coordination, worker matching, leases, heartbeats, recovery, and reference queue behavior.

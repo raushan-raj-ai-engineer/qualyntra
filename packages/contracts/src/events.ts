@@ -3,7 +3,7 @@
  * Purpose: Defines platform audit and lifecycle event envelopes.
  * Author: Raushan Raj
  */
-export type PlatformEventType='adapter.registered'|'execution.started'|'execution.completed'|'evaluation.completed'|'security.denied'|'compatibility.checked'|'configuration.loaded'|'authorization.decided'|'release.evaluated'|'audit.appended'|'integration.executed';
+export type PlatformEventType='adapter.registered'|'execution.started'|'execution.completed'|'evaluation.completed'|'security.denied'|'compatibility.checked'|'configuration.loaded'|'authorization.decided'|'release.evaluated'|'audit.appended'|'integration.executed'|'distributed.job.queued'|'distributed.job.leased'|'distributed.job.completed'|'distributed.worker.heartbeat';
 export interface PlatformEvent<T=unknown> { id:string; type:PlatformEventType; timestamp:string; actor?:string; correlationId?:string; payload:T; }
 export interface EventSink { publish<T>(event:PlatformEvent<T>):Promise<void>; }
 

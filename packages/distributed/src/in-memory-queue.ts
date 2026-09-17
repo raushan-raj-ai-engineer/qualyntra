@@ -1,0 +1,38 @@
+/**
+ * File: packages/distributed/src/in-memory-queue.ts
+ * Purpose: Provides a deterministic in-memory distributed execution queue for local development, conformance tests, and adapter reference behavior.
+ * Author: Raushan Raj
+ */
+import type { DistributedExecutionJob,DistributedExecutionQueue,DistributedQueueHealth,LeaseOptions,WorkerRegistration,WorkerState } from '../../contracts/src/distributed';
+import type { ExecutionResult } from '../../contracts/src/execution';
+import { createId } from '../../core/src/ids';
+import { workerMatches } from './matching';
+import { scopeContains } from '../../governance/src/tenancy';
+function clone<T>(value:T):T{return structuredClone(value);}
+function epoch(value:string):number{const n=Date.parse(value);if(!Number.isFinite(n))throw new Error(`Invalid ISO timestamp: ${value}`);return n;}
+function later(now:string,ms:number):string{return new Date(epoch(now)+ms).toISOString();}
+function terminal(state:string):boolean{return ['succeeded','failed','cancelled','dead-letter'].includes(state);}
+export class InMemoryDistributedExecutionQueue implements DistributedExecutionQueue{
+  private readonly jobs=new Map<string,DistributedExecutionJob>();private readonly workers=new Map<string,WorkerRegistration>();
+  async enqueue(job:DistributedExecutionJob){if(this.jobs.has(job.id))throw new Error(`Distributed job already exists: ${job.id}`);this.jobs.set(job.id,clone(job));return clone(job);}
+  async getJob(id:string){const value=this.jobs.get(id);return value?clone(value):undefined;}
+  async cancel(id:string,now:string){const job=this.mustJob(id);if(terminal(job.state))return clone(job);this.releaseWorker(job);job.state='cancelled';job.updatedAt=now;delete job.lease;this.jobs.set(id,job);return clone(job);}
+  async registerWorker(worker:WorkerRegistration){if(worker.maxConcurrency<1||!Number.isInteger(worker.maxConcurrency))throw new Error('Worker maxConcurrency must be a positive integer.');const existing=this.workers.get(worker.id);const stored={...clone(worker),activeLeases:existing?.activeLeases??0};this.workers.set(worker.id,stored);return clone(stored);}
+  async getWorker(id:string){const value=this.workers.get(id);return value?clone(value):undefined;}
+  async listWorkers(){return [...this.workers.values()].sort((a,b)=>a.id.localeCompare(b.id)).map(clone);}
+  async heartbeatWorker(id:string,now:string,state?:WorkerState){const worker=this.mustWorker(id);worker.heartbeatAt=now;if(state)worker.state=state;this.workers.set(id,worker);return clone(worker);}
+  async leaseNext(workerId:string,options:LeaseOptions){const worker=this.mustWorker(workerId);if(worker.state!=='online')return undefined;if(epoch(options.now)-epoch(worker.heartbeatAt)>options.workerStaleMs)return undefined;if(worker.activeLeases>=worker.maxConcurrency)return undefined;const candidates=[...this.jobs.values()].filter(job=>job.state==='queued'&&epoch(job.availableAt)<=epoch(options.now)&&scopeContains(worker.scope,job.scope)&&workerMatches(worker.capabilities,job.requirements)).sort((a,b)=>a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id));const job=candidates[0];if(!job)return undefined;job.state='leased';job.attempt+=1;job.updatedAt=options.now;job.lease={id:createId('lease'),workerId,acquiredAt:options.now,heartbeatAt:options.now,expiresAt:later(options.now,options.leaseMs)};worker.activeLeases+=1;this.jobs.set(job.id,job);this.workers.set(worker.id,worker);return clone(job);}
+  async heartbeatLease(jobId:string,leaseId:string,now:string,leaseMs:number){const job=this.mustActiveLease(jobId,leaseId,now);if(terminal(job.state))throw new Error(`Cannot heartbeat terminal job: ${jobId}`);job.lease!.heartbeatAt=now;job.lease!.expiresAt=later(now,leaseMs);job.updatedAt=now;return this.save(job);}
+  async markRunning(jobId:string,leaseId:string,now:string){const job=this.mustActiveLease(jobId,leaseId,now);if(job.state!=='leased')throw new Error(`Job is not leased: ${jobId}`);job.state='running';job.updatedAt=now;return this.save(job);}
+  async complete(jobId:string,leaseId:string,result:ExecutionResult,now:string){const job=this.mustActiveLease(jobId,leaseId,now);if(!['leased','running'].includes(job.state))throw new Error(`Job cannot complete from state ${job.state}`);this.releaseWorker(job);job.state=result.status==='cancelled'?'cancelled':result.status==='passed'?'succeeded':'failed';job.updatedAt=now;job.result=clone(result);delete job.lease;return this.save(job);}
+  async fail(jobId:string,leaseId:string,input:{message:string;retryable:boolean;now:string;retryDelayMs?:number}){const job=this.mustActiveLease(jobId,leaseId,input.now);this.releaseWorker(job);job.failure={message:input.message,retryable:input.retryable,failedAt:input.now};job.updatedAt=input.now;delete job.lease;if(input.retryable&&job.attempt<job.maxAttempts){job.state='queued';job.availableAt=later(input.now,input.retryDelayMs??0);}else job.state=job.attempt>=job.maxAttempts?'dead-letter':'failed';return this.save(job);}
+  async recoverExpired(now:string){const requeued:string[]=[];const deadLettered:string[]=[];const workersOffline:string[]=[];for(const worker of this.workers.values()){if(worker.state!=='offline'&&epoch(now)>epoch(worker.heartbeatAt)){/* stale threshold is applied in health/lease; explicit offline is determined by expired active lease below */}}
+    for(const job of this.jobs.values()){if(!job.lease||!['leased','running'].includes(job.state)||epoch(job.lease.expiresAt)>epoch(now))continue;const worker=this.workers.get(job.lease.workerId);if(worker){worker.activeLeases=Math.max(0,worker.activeLeases-1);worker.state='offline';workersOffline.push(worker.id);this.workers.set(worker.id,worker);}delete job.lease;job.updatedAt=now;if(job.attempt<job.maxAttempts){job.state='queued';job.availableAt=now;requeued.push(job.id);}else{job.state='dead-letter';job.failure={message:'Execution lease expired.',retryable:true,failedAt:now};deadLettered.push(job.id);}this.jobs.set(job.id,job);}return{requeued,deadLettered,workersOffline:[...new Set(workersOffline)]};}
+  async health(now:string,workerStaleMs:number):Promise<DistributedQueueHealth>{let workersOnline=0;for(const worker of this.workers.values())if(worker.state==='online'&&epoch(now)-epoch(worker.heartbeatAt)<=workerStaleMs)workersOnline++;const jobs=[...this.jobs.values()];const queued=jobs.filter(j=>j.state==='queued').length;const leased=jobs.filter(j=>j.state==='leased').length;const running=jobs.filter(j=>j.state==='running').length;return{status:queued>0&&workersOnline===0?'degraded':'healthy',queued,leased,running,workersOnline,checkedAt:now,message:queued>0&&workersOnline===0?'Queued work exists without an eligible online worker.':undefined};}
+  private mustJob(id:string){const job=this.jobs.get(id);if(!job)throw new Error(`Distributed job not found: ${id}`);return clone(job);}
+  private mustWorker(id:string){const worker=this.workers.get(id);if(!worker)throw new Error(`Worker not registered: ${id}`);return clone(worker);}
+  private mustLease(jobId:string,leaseId:string){const job=this.mustJob(jobId);if(!job.lease||job.lease.id!==leaseId)throw new Error(`Lease mismatch for job: ${jobId}`);return job;}
+  private mustActiveLease(jobId:string,leaseId:string,now:string){const job=this.mustLease(jobId,leaseId);if(epoch(now)>epoch(job.lease!.expiresAt))throw new Error(`Lease expired for job: ${jobId}`);return job;}
+  private releaseWorker(job:DistributedExecutionJob){if(!job.lease)return;const worker=this.workers.get(job.lease.workerId);if(worker){worker.activeLeases=Math.max(0,worker.activeLeases-1);this.workers.set(worker.id,worker);}}
+  private save(job:DistributedExecutionJob){this.jobs.set(job.id,clone(job));return Promise.resolve(clone(job));}
+}

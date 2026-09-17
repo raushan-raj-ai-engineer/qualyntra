@@ -18,3 +18,5 @@ export * from './integration';
 export * from './control-plane';
 export * from './persistence';
 export * from './identity';
+
+export * from './distributed';
