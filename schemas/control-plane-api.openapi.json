@@ -7,45 +7,556 @@
     "version": "1.0.0",
     "description": "Vendor-neutral tenant-aware API for runs, results, evaluations, governance, adapters, and integrations."
   },
-  "servers": [{"url": "/api/v1"}],
-  "security": [{"BearerAuth": []}],
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
   "components": {
-    "securitySchemes": {"BearerAuth": {"type": "http", "scheme": "bearer"}},
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
     "parameters": {
-      "OrganizationId": {"name": "x-qualyntra-organization-id", "in": "header", "required": true, "schema": {"type": "string"}},
-      "WorkspaceId": {"name": "x-qualyntra-workspace-id", "in": "header", "required": false, "schema": {"type": "string"}},
-      "ProjectId": {"name": "x-qualyntra-project-id", "in": "header", "required": false, "schema": {"type": "string"}},
-      "EnvironmentId": {"name": "x-qualyntra-environment-id", "in": "header", "required": false, "schema": {"type": "string"}},
-      "Offset": {"name": "offset", "in": "query", "schema": {"type": "integer", "minimum": 0, "default": 0}},
-      "Limit": {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1}}
+      "OrganizationId": {
+        "name": "x-qualyntra-organization-id",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "WorkspaceId": {
+        "name": "x-qualyntra-workspace-id",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ProjectId": {
+        "name": "x-qualyntra-project-id",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "EnvironmentId": {
+        "name": "x-qualyntra-environment-id",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Offset": {
+        "name": "offset",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     },
     "schemas": {
-      "ApiError": {"type": "object", "required": ["error"], "properties": {"error": {"type": "object", "required": ["code", "message", "requestId", "correlationId"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "requestId": {"type": "string"}, "correlationId": {"type": "string"}, "details": {"type": "object"}}}}},
-      "TenantScope": {"type": "object", "required": ["organizationId"], "properties": {"organizationId": {"type": "string"}, "workspaceId": {"type": "string"}, "projectId": {"type": "string"}, "environmentId": {"type": "string"}}}
+      "ApiError": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "requestId",
+              "correlationId"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "correlationId": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "TenantScope": {
+        "type": "object",
+        "required": [
+          "organizationId"
+        ],
+        "properties": {
+          "organizationId": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "environmentId": {
+            "type": "string"
+          }
+        }
+      },
+      "IntegrationActionRequest": {
+        "type": "object",
+        "required": [
+          "operation",
+          "payload"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "publish-status",
+              "create-work-item",
+              "comment",
+              "trigger-build",
+              "notify",
+              "custom"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
     }
   },
   "paths": {
-    "/health": {"get": {"security": [], "summary": "Liveness probe", "responses": {"200": {"description": "Alive"}}}},
-    "/ready": {"get": {"security": [], "summary": "Readiness probe", "responses": {"200": {"description": "Ready"}, "503": {"description": "Not ready"}}}},
-    "/capabilities": {"get": {"summary": "Discover control-plane capabilities", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Capabilities"}}}},
+    "/health": {
+      "get": {
+        "security": [],
+        "summary": "Liveness probe",
+        "responses": {
+          "200": {
+            "description": "Alive"
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "security": [],
+        "summary": "Readiness probe",
+        "responses": {
+          "200": {
+            "description": "Ready"
+          },
+          "503": {
+            "description": "Not ready"
+          }
+        }
+      }
+    },
+    "/capabilities": {
+      "get": {
+        "summary": "Discover control-plane capabilities",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Capabilities"
+          }
+        }
+      }
+    },
     "/runs": {
-      "get": {"summary": "List runs", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}, {"$ref": "#/components/parameters/Offset"}, {"$ref": "#/components/parameters/Limit"}], "responses": {"200": {"description": "Paged runs"}}},
-      "post": {"summary": "Queue a run", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}, {"name": "idempotency-key", "in": "header", "required": false, "schema": {"type": "string"}}], "responses": {"201": {"description": "Created"}, "200": {"description": "Existing idempotent run"}, "409": {"description": "Idempotency conflict"}}}
+      "get": {
+        "summary": "List runs",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged runs"
+          }
+        }
+      },
+      "post": {
+        "summary": "Queue a run",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "200": {
+            "description": "Existing idempotent run"
+          },
+          "409": {
+            "description": "Idempotency conflict"
+          }
+        }
+      }
     },
-    "/runs/{id}": {"get": {"summary": "Get a run", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Run"}, "404": {"description": "Not found"}}}},
+    "/runs/{id}": {
+      "get": {
+        "summary": "Get a run",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
     "/runs/{id}/results": {
-      "get": {"summary": "List normalized results for a run", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Results"}}},
-      "post": {"summary": "Store normalized results", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"202": {"description": "Accepted"}}}
+      "get": {
+        "summary": "List normalized results for a run",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results"
+          }
+        }
+      },
+      "post": {
+        "summary": "Store normalized results",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
     },
-    "/evaluations": {"get": {"summary": "List evaluation records", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Evaluations"}}}, "post": {"summary": "Queue an evaluation record", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"201": {"description": "Created"}}}},
-    "/evaluations/{id}": {"get": {"summary": "Get an evaluation record", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Evaluation"}, "404": {"description": "Not found"}}}},
-    "/policies": {"get": {"summary": "List release policies", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Policies"}}}, "post": {"summary": "Store a release policy", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"201": {"description": "Created"}}}},
-    "/releases/{id}/decision": {"get": {"summary": "Get a stored release decision", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Decision"}}}, "post": {"summary": "Evaluate and store a release decision", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Decision"}}}},
-    "/audit": {"get": {"summary": "List tenant-scoped audit records", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Audit records"}}}},
-    "/adapters": {"get": {"summary": "List adapter descriptors", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Adapters"}}}},
-    "/runtimes": {"get": {"summary": "List runtime adapter descriptors", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Runtimes"}}}},
-    "/providers": {"get": {"summary": "List model-provider adapter descriptors", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Providers"}}}},
-    "/integrations": {"get": {"summary": "List integration adapter descriptors", "parameters": [{"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Integrations"}}}},
-    "/integrations/{id}/actions": {"post": {"summary": "Execute an integration operation", "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}, {"$ref": "#/components/parameters/OrganizationId"}], "responses": {"200": {"description": "Integration response"}}}}
+    "/evaluations": {
+      "get": {
+        "summary": "List evaluation records",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluations"
+          }
+        }
+      },
+      "post": {
+        "summary": "Queue an evaluation record",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/evaluations/{id}": {
+      "get": {
+        "summary": "Get an evaluation record",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/policies": {
+      "get": {
+        "summary": "List release policies",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Policies"
+          }
+        }
+      },
+      "post": {
+        "summary": "Store a release policy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/releases/{id}/decision": {
+      "get": {
+        "summary": "Get a stored release decision",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decision"
+          }
+        }
+      },
+      "post": {
+        "summary": "Evaluate and store a release decision",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decision"
+          }
+        }
+      }
+    },
+    "/audit": {
+      "get": {
+        "summary": "List tenant-scoped audit records",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit records"
+          }
+        }
+      }
+    },
+    "/adapters": {
+      "get": {
+        "summary": "List adapter descriptors",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Adapters"
+          }
+        }
+      }
+    },
+    "/runtimes": {
+      "get": {
+        "summary": "List runtime adapter descriptors",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Runtimes"
+          }
+        }
+      }
+    },
+    "/providers": {
+      "get": {
+        "summary": "List model-provider adapter descriptors",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Providers"
+          }
+        }
+      }
+    },
+    "/integrations": {
+      "get": {
+        "summary": "List integration adapter descriptors",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integrations"
+          }
+        }
+      }
+    },
+    "/integrations/{id}/actions": {
+      "post": {
+        "summary": "Execute an integration operation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Required by duplicate-sensitive integration mutations such as issue/work-item creation and build triggering."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integration response"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationActionRequest"
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

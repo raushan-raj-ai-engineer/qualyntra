@@ -12,7 +12,7 @@ Author: Raushan Raj
 - Selenium WebDriver/BiDi and Grid execution provider.
 - Appium device/cloud provider integrations.
 - BrowserStack/Sauce/LambdaTest execution providers.
-- Jira/Azure DevOps/GitHub/GitLab/Jenkins integrations.
+- Expand implemented GitHub/Azure DevOps/Jira/Jenkins integration adapters with GitLab, richer GitHub App checks, service-hook/webhook ingestion, and durable tenant-managed integration configuration.
 - Native RAG faithfulness/relevance and agent trajectory metrics.
 - Multi-judge consensus and calibration datasets.
 - Prompt-injection/red-team/security suites.

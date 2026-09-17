@@ -27,6 +27,7 @@ Author: Raushan Raj
 | `adapters/results` | External result normalization |
 | `adapters/llm` | Model providers |
 | `adapters/evaluators` | External evaluator bridges |
+| `adapters/integrations` | Vendor-specific GitHub, Azure DevOps, Jira, Jenkins and future enterprise-system adapters |
 | `sdks/*` | Language-specific contracts, bridges, execution helpers and evidence/result normalization |
 | `compatibility` | Version certification evidence/policy |
 | `schemas` | Cross-language JSON schemas |

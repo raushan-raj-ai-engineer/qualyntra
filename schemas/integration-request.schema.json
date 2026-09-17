@@ -1,13 +1,12 @@
 {
-  "x-file-purpose": "Defines the vendor-neutral integration request envelope exchanged with enterprise adapters.",
+  "x-file-purpose": "Defines the cross-language enterprise integration execution request schema.",
   "x-author": "Raushan Raj",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Qualyntra Integration Request",
   "type": "object",
   "required": ["operation", "scope", "correlationId", "payload"],
   "properties": {
-    "operation": {"enum": ["publish-status", "create-work-item", "comment", "notify", "custom"]},
-    "correlationId": {"type": "string", "minLength": 1},
+    "operation": {"type": "string", "enum": ["publish-status", "create-work-item", "comment", "trigger-build", "notify", "custom"]},
     "scope": {
       "type": "object",
       "required": ["organizationId"],
@@ -19,6 +18,9 @@
       },
       "additionalProperties": false
     },
+    "correlationId": {"type": "string", "minLength": 1},
+    "actorId": {"type": "string", "minLength": 1},
+    "idempotencyKey": {"type": "string", "minLength": 1, "maxLength": 256},
     "payload": {"type": "object"}
   },
   "additionalProperties": false

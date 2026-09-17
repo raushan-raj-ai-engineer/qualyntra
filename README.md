@@ -60,3 +60,6 @@ Durable storage remains adapter-based. The reference PostgreSQL adapter provides
 
 ## Enterprise identity
 Qualyntra supports standards-based OIDC discovery/JWKS JWT verification, multi-issuer authentication, tenant claim mapping, service identities, and group-to-role mapping without identity-vendor SDK coupling. See `docs/25-ENTERPRISE-IDENTITY.md`.
+
+## Enterprise integrations
+GitHub, Azure DevOps, Jira, and Jenkins are implemented as secret-referenced, network-policy-governed REST adapters with idempotency/retry controls, rate-limit metadata, webhook verification boundaries, and audit evidence. See `docs/26-ENTERPRISE-INTEGRATIONS.md`.
