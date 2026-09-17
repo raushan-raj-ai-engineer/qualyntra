@@ -12,3 +12,4 @@ export * from './events';
 export * from './configuration';
 export * from './automation';
 export * from './runtime';
+export * from './provider';
