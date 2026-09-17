@@ -5,3 +5,4 @@
  */
 export * from './redaction';
 export * from './network-policy';
+export * from './secrets';

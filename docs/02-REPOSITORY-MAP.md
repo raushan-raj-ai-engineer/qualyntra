@@ -39,3 +39,6 @@ Author: Raushan Raj
 
 - `adapters/results/default-registry/`: prioritized built-in result format detection/wiring.
 - `tests/ingestion/`: external result adapter, registry and ingestion-safety contract tests.
+
+- `packages/governance/`: RBAC, tenancy, audit, release policy and governance orchestration.
+- `packages/integrations/`: vendor-neutral integration orchestration over registered adapters.
