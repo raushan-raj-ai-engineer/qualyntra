@@ -19,12 +19,13 @@ Author: Raushan Raj
 | `packages/reporting` | Unified quality aggregation |
 | `packages/security` | Redaction/network policy |
 | `packages/configuration` | Environment-derived configuration |
+| `adapters/runtimes` | Language/runtime discovery, lifecycle and health adapters |
 | `adapters/runners` | Test-runner process adapters |
 | `adapters/automation` | Automation-engine capability adapters |
 | `adapters/results` | External result normalization |
 | `adapters/llm` | Model providers |
 | `adapters/evaluators` | External evaluator bridges |
-| `sdks/*` | Language-specific integration contracts |
+| `sdks/*` | Language-specific contracts, bridges, execution helpers and evidence/result normalization |
 | `compatibility` | Version certification evidence/policy |
 | `schemas` | Cross-language JSON schemas |
 | `tests` | Product contract tests |

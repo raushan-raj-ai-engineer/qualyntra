@@ -11,7 +11,7 @@ Qualyntra does not translate test code between languages at runtime. It normaliz
 ### Supported integration surfaces at v1.0
 
 - TypeScript/JavaScript: Playwright Test, Cypress, WebdriverIO and custom processes.
-- Python: Pytest plus Playwright/Selenium/Appium in project-owned code via the Python SDK.
+- Python: runtime/package discovery, Pytest execution/discovery, JUnit/evidence normalization, and project-owned Playwright/Selenium integration through the Python SDK.
 - Java: JUnit/TestNG plus Selenium/Playwright/Appium through the Java SDK and normalized result ingestion.
 - .NET: contract SDK for NUnit/xUnit/MSTest style integrations; build validation requires a .NET SDK in CI.
 
@@ -23,3 +23,8 @@ Qualyntra does not translate test code between languages at runtime. It normaliz
 
 This staged approach lets existing customer suites onboard without migration.
 
+
+
+### Python runtime boundary
+
+The Python integration uses a runtime adapter plus a dependency-free SDK and JSON/process boundary. Pytest, Playwright and Selenium remain optional project-owned dependencies. Runtime detection is separate from certification so Qualyntra can support an integration surface without making an unverified version claim.

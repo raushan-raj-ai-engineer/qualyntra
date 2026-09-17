@@ -1,5 +1,5 @@
 # File: sdks/python/pyproject.toml
-# Purpose: Defines packaging metadata for the Python SDK.
+# Purpose: Defines packaging metadata and the optional JSON-bridge command for the dependency-free Python SDK.
 # Author: Raushan Raj
 
 [build-system]
@@ -12,3 +12,6 @@ version = "1.0.0"
 description = "Qualyntra Python SDK"
 authors = [{name = "Raushan Raj"}]
 requires-python = ">=3.11"
+
+[project.scripts]
+qualyntra-python-bridge = "qualyntra.bridge:main"
