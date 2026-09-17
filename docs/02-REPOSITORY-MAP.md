@@ -14,7 +14,7 @@ Author: Raushan Raj
 | `packages/contracts` | Stable cross-language contracts |
 | `packages/core` | Adapter registry, capability model, core events/IDs |
 | `packages/execution` | Runner-neutral orchestration |
-| `packages/evaluation` | LLM/RAG/agent evaluation engine |
+| `packages/evaluation` | Provider-neutral LLM/RAG/agent evaluation, metric registry, judge consensus, telemetry and release gates |
 | `packages/reporting` | Unified quality aggregation |
 | `packages/security` | Redaction/network policy |
 | `packages/configuration` | Environment-derived configuration |

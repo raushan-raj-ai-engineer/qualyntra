@@ -1,29 +1,41 @@
 <!--
 File: docs/05-LLM-TESTING.md
-Purpose: Documents multi-LLM, custom-provider, RAG, agent/tool, LLM-judge, DeepEval, and regression-gate testing strategy.
+Purpose: Documents multi-LLM, custom-provider, RAG, agent/tool, LLM-judge, DeepEval, multi-judge, telemetry, and regression-gate testing strategy.
 Author: Raushan Raj
 -->
 
 # LLM / RAG / Agent Testing
 
-LLM testing is a first-class platform domain, not a sidecar.
+LLM testing is a first-class platform domain, not a sidecar. The authoritative engine design is documented in `14-LLM-EVALUATION-ENGINE.md`.
 
 ## Provider model
 
 `ModelProviderAdapter` supports multiple providers and ordered failover. `OpenAICompatibleProvider` covers endpoints that implement the chat-completions shape; `CustomModelProvider` allows internal enterprise models. Credentials come from the environment or the customer secret store.
 
-The **system under test** and **judge** are intentionally separate. A Claude-based application can be judged by another approved model, deterministic metrics, or a multi-judge policy built above the same contract.
+The **system under test** and **judge** are intentionally separate. A model can be evaluated by another approved provider, deterministic metrics, custom business rules, or a quorum of multiple judges.
 
-## Native v1.0 metrics
+## Evaluation composition
+
+`EvaluationDataset` contains portable evaluation cases. `EvaluationProfile` combines a metric set with an optional release gate. The engine returns normalized per-case results plus a dataset summary.
+
+## Native metrics
 
 - Exact match.
 - Expected-content containment.
-- Tool correctness.
+- Significant-token overlap.
+- JSON validity.
+- Tool correctness, precision, recall, and sequence.
 - Retrieval-context coverage heuristic.
-- Custom metric callback.
-- Generic LLM-as-a-judge rubric.
+- Groundedness lexical heuristic.
+- Custom metric callbacks.
+- Generic single LLM-as-a-judge rubric.
+- Multi-judge consensus using mean, median, or minimum aggregation.
 
-The metric contract is ready for faithfulness, relevance, safety, task completion, trajectory, cost and latency metrics without core changes.
+Lexical RAG metrics are intentionally described as heuristics rather than semantic proof.
+
+## Multi-judge evaluation
+
+`MultiJudgeMetric` uses providers supplied through `EvaluationContext`. A policy defines the aggregation strategy and the minimum number of successful judges. Unavailable judges can be tolerated when quorum remains satisfied, and failures are retained in normalized metric details.
 
 ## DeepEval
 
@@ -31,5 +43,11 @@ The optional bridge keeps DeepEval outside core. The bundled bridge verifies dep
 
 ## Regression gates
 
-Dataset runs can gate on total pass rate and per-metric average. Cost and latency fields are present in provider responses so enterprise gates can add budget/latency controls.
+Dataset runs can gate on:
 
+- total pass rate;
+- per-metric average score;
+- maximum average evaluation cost;
+- maximum P95 evaluation latency.
+
+Metric telemetry also tracks judge calls and token usage when providers expose that data.
