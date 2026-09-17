@@ -19,3 +19,14 @@ test('process probe treats missing executable as unavailable', async () => {
   assert.equal(result.available, false);
   assert.match(result.stderr, /ENOENT|not found/i);
 });
+
+
+test('process probe can send stdin without enabling a shell', async () => {
+  const result = await probeProcess(
+    process.execPath,
+    ['-e', "process.stdin.setEncoding('utf8');let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.stdout.write(s.toUpperCase()))"],
+    { input: 'bridge-input', timeoutMs: 10_000 },
+  );
+  assert.equal(result.exitCode, 0);
+  assert.equal(result.stdout, 'BRIDGE-INPUT');
+});

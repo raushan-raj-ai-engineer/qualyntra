@@ -12,7 +12,7 @@ Qualyntra does not translate test code between languages at runtime. It normaliz
 
 - TypeScript/JavaScript: Playwright Test, Cypress, WebdriverIO and custom processes.
 - Python: runtime/package discovery, Pytest execution/discovery, JUnit/evidence normalization, plus executable Playwright/Selenium browser automation through a shared Python SDK plan/result boundary.
-- Java: JUnit/TestNG plus Selenium/Playwright/Appium through the Java SDK and normalized result ingestion.
+- Java: JVM/Javac runtime discovery, optional JUnit/TestNG classpath detection, dependency-free JSON bridge, secure JUnit/TestNG result normalization and evidence hashing; Selenium/Playwright automation remains adapter-owned.
 - .NET: contract SDK for NUnit/xUnit/MSTest style integrations; build validation requires a .NET SDK in CI.
 
 ### Integration levels
@@ -28,3 +28,8 @@ This staged approach lets existing customer suites onboard without migration.
 ### Python runtime boundary
 
 The Python integration uses a runtime adapter plus a dependency-free SDK and JSON/process boundary. Pytest, Playwright and Selenium remain optional project-owned dependencies. Runtime detection is separate from certification so Qualyntra can support an integration surface without making an unverified version claim.
+
+
+### Java runtime boundary
+
+The Java integration mirrors the Python architecture: the control plane talks to a language-specific boundary instead of importing Java frameworks into core. JVM/Javac discovery is independent from JUnit/TestNG classpath discovery, and result ingestion is secured against external XML entities. Maven/Gradle are optional project concerns rather than Qualyntra runtime requirements.

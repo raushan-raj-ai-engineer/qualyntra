@@ -9,6 +9,7 @@ export interface ProcessProbeOptions {
   cwd?: string;
   env?: Record<string, string | undefined>;
   timeoutMs?: number;
+  input?: string;
 }
 
 export interface ProcessProbeResult {
@@ -38,6 +39,8 @@ export async function probeProcess(
       env: { ...process.env, ...options.env },
       shell: false,
     });
+
+    if (options.input !== undefined) child.stdin?.end(options.input);
 
     const timer = options.timeoutMs
       ? setTimeout(() => {
