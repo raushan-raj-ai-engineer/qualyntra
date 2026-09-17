@@ -1,0 +1,45 @@
+{
+  "x-file-purpose": "Defines the portable configuration shape for Qualyntra OIDC enterprise identity providers and tenant-aware claim mapping.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qualyntra:schema:identity-provider:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "issuer", "audiences", "allowedAlgorithms", "mapping"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "issuer": { "type": "string", "minLength": 1 },
+    "audiences": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "discoveryUrl": { "type": "string", "minLength": 1 },
+    "allowedAlgorithms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["RS256", "ES256"] } },
+    "clockSkewSeconds": { "type": "integer", "minimum": 0, "maximum": 600 },
+    "jwksCacheTtlSeconds": { "type": "integer", "minimum": 30 },
+    "requestTimeoutMs": { "type": "integer", "minimum": 100 },
+    "maxTokenBytes": { "type": "integer", "minimum": 1024 },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["groupClaim", "organizationClaim", "roleMappings"],
+      "properties": {
+        "groupClaim": { "type": "string", "minLength": 1 },
+        "organizationClaim": { "type": "string", "minLength": 1 },
+        "workspaceClaim": { "type": "string", "minLength": 1 },
+        "projectClaim": { "type": "string", "minLength": 1 },
+        "environmentClaim": { "type": "string", "minLength": 1 },
+        "serviceSubjects": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "roleMappings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["group", "roleId"],
+            "properties": {
+              "group": { "type": "string", "minLength": 1 },
+              "roleId": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

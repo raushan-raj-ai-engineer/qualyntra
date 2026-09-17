@@ -10,7 +10,7 @@ Qualyntra exposes a dependency-light `/api/v1` HTTP control plane so CI systems,
 
 `/api/v1/health` and `/api/v1/ready` are public probe endpoints. Every business endpoint requires bearer authentication plus `x-qualyntra-organization-id`; optional workspace, project, and environment headers narrow the tenant scope. Authorization is deny-by-default through the governance RBAC service.
 
-The bootstrap server reads `QUALYNTRA_API_TOKEN`, `QUALYNTRA_API_ACTOR_ID`, and `QUALYNTRA_API_ORGANIZATION_ID` from the environment. This is intentionally a bootstrap authenticator, not a replacement for future OIDC/SSO adapters. Raw API tokens are never stored in platform records or audit metadata.
+The bootstrap server reads `QUALYNTRA_API_TOKEN`, `QUALYNTRA_API_ACTOR_ID`, and `QUALYNTRA_API_ORGANIZATION_ID` from the environment. This remains a bootstrap authenticator; deployments can now compose it with the standards-based OIDC/JWT enterprise authenticator documented in `25-ENTERPRISE-IDENTITY.md`. Raw API tokens are never stored in platform records or audit metadata.
 
 Control-plane run requests reject persisted raw `env` values. Execution secrets must be expressed as `secretRefs`, preserving the governance rule that the platform stores references rather than plaintext secrets.
 
@@ -50,4 +50,4 @@ QUALYNTRA_API_ORGANIZATION_ID=<organization id>
 
 Optional API limits are `QUALYNTRA_API_MAX_BODY_BYTES`, `QUALYNTRA_API_MAX_PAGE_SIZE`, `QUALYNTRA_API_RATE_LIMIT_PER_MINUTE`, and `QUALYNTRA_API_CORS_ORIGINS`.
 
-The local reference server intentionally uses in-memory repositories. Production persistence, OIDC/SSO, distributed workers, and durable idempotency are separate adapters/features rather than hidden assumptions in this API layer.
+The local reference server intentionally uses in-memory repositories. Durable persistence and OIDC/JWT enterprise authentication are now adapter-based features; distributed workers and browser-oriented SSO/session flows remain separate features rather than hidden assumptions in this API layer.

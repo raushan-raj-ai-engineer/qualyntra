@@ -21,7 +21,7 @@ Qualyntra governance is deliberately vendor-neutral and deny-by-default. It is a
 
 ## Deliberate boundaries
 
-The current audit store is an in-process tamper-evident implementation for contracts/tests. Commercial deployment still needs a durable database/object-store implementation and, where required, WORM/retention controls. SSO/OIDC/SAML, KMS/BYOK, external policy stores, and vendor-specific Jira/GitHub/Azure/Jenkins integrations should be adapters built on these contracts.
+The current audit store is an in-process tamper-evident implementation for contracts/tests. Commercial deployment still needs a durable database/object-store implementation and, where required, WORM/retention controls. OIDC/JWT enterprise identity is now implemented as a vendor-neutral identity package. Browser SSO/BFF, optional SAML/SCIM, KMS/BYOK, external policy stores, and vendor-specific Jira/GitHub/Azure/Jenkins integrations should remain adapters/features built on these contracts.
 
 ## Release-policy example
 

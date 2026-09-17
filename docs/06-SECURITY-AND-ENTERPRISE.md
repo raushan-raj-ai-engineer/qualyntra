@@ -26,13 +26,23 @@ Author: Raushan Raj
 
 See `22-ENTERPRISE-GOVERNANCE.md`.
 
+### Enterprise identity foundation now implemented
+
+- Standards-based OIDC discovery and JWKS validation.
+- Explicit JWT algorithm, issuer, audience and lifetime verification.
+- Multi-issuer authentication from a preconfigured issuer set only.
+- Tenant claim mapping plus configured group-to-role assignments.
+- Explicit service identities and composable bootstrap bearer authentication.
+
+See `25-ENTERPRISE-IDENTITY.md`.
+
 ### Required before broad commercial deployment
 
-The v1.0 codebase establishes extension points but production SaaS/on-prem distribution should add independently reviewed implementations for SSO (OIDC/SAML), RBAC/ABAC, tenant isolation, audit-log persistence/WORM options, encryption/KMS/BYOK, retention/deletion policies, signed artifacts, SBOM/provenance, vulnerability scanning, license scanning, backup/restore, HA/DR, rate limiting, API authentication, database migrations and formal threat modeling.
+The v1.0 codebase establishes extension points but production SaaS/on-prem distribution should still add independently reviewed browser SSO/BFF flows where needed, optional SAML/SCIM, ABAC, audit-log WORM/retention options, encryption/KMS/BYOK, retention/deletion policies, signed artifacts, SBOM/provenance, vulnerability scanning, license scanning, backup/restore, HA/DR and formal threat modeling.
 
 These are productization work items, not hidden assumptions. See `10-COMMERCIAL-READINESS.md`.
 
 
 ## Control-plane API
 
-Protected `/api/v1` routes require authentication, explicit tenant context, and governance RBAC. The bootstrap bearer token is environment-supplied; production identity remains replaceable by an OIDC/SSO authenticator. API requests are body-limited, rate-limited, correlation-tagged, and returned through stack-free error envelopes. Raw run environment values are rejected in favor of secret references.
+Protected `/api/v1` routes require authentication, explicit tenant context, and governance RBAC. The bootstrap bearer token is environment-supplied and can now be composed with the vendor-neutral OIDC/JWT enterprise authenticator. API requests are body-limited, rate-limited, correlation-tagged, and returned through stack-free error envelopes. Raw run environment values are rejected in favor of secret references.

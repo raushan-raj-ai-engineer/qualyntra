@@ -26,7 +26,7 @@ Qualyntra is intentionally designed so the **platform kernel does not depend on 
 - TypeScript SDK plus dependency-free Python and Java runtime/SDK boundaries: Python provides Pytest plus Playwright/Selenium automation; Java provides JVM/Javac discovery, optional JUnit/TestNG capabilities, JSON bridge, secure result normalization and evidence hashing; .NET provides contract SDK foundations.
 - CLI, lightweight control-plane HTTP API and static dashboard shell.
 - Playwright compatibility/certification policy so future Playwright releases can be qualified without changing platform core.
-- Security defaults: network egress opt-in, secrets from environment only, redaction utility, audit events and no credential persistence.
+- Security defaults: network egress opt-in, secrets from environment only, redaction utility, audit events, no credential persistence, and vendor-neutral OIDC/JWKS enterprise bearer authentication with tenant-aware claim mapping.
 - Architecture/header/hardcoding/schema/compatibility audits and release validation.
 
 ## Local validation
@@ -56,3 +56,7 @@ Qualyntra includes a versioned `/api/v1` control plane with bearer authenticatio
 
 ## Persistence foundation
 Durable storage remains adapter-based. The reference PostgreSQL adapter provides tenant-safe repositories, optimistic concurrency, immutable checksummed migrations, durable idempotency, and transactionally serialized audit chains. See `docs/24-PERSISTENCE-FOUNDATION.md`.
+
+
+## Enterprise identity
+Qualyntra supports standards-based OIDC discovery/JWKS JWT verification, multi-issuer authentication, tenant claim mapping, service identities, and group-to-role mapping without identity-vendor SDK coupling. See `docs/25-ENTERPRISE-IDENTITY.md`.
