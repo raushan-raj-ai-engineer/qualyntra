@@ -6,7 +6,7 @@
 declare module 'node:child_process' { export function spawn(command:string,args?:string[],options?:any): any; }
 declare module 'node:fs' { export const promises:any; export function readFileSync(path:string,encoding:string):string; export function existsSync(path:string):boolean; export function createReadStream(path:string,options?:any):any; }
 declare module 'node:path' { const p:any; export = p; }
-declare module 'node:os' { export function tmpdir(): string; }
+declare module 'node:os' { export function tmpdir(): string; export function hostname(): string; export function platform(): string; export function arch(): string; export function release(): string; }
 declare module 'node:http' { export function createServer(handler:(req:any,res:any)=>void): any; }
 declare module 'node:crypto' { export function randomUUID(): string; export function createHash(name:string): any; export function createHmac(name:string,key:any): any; export function timingSafeEqual(a:any,b:any): boolean; export function createPublicKey(options:any): any; export function verify(algorithm:string,data:any,key:any,signature:any): boolean; export function generateKeyPairSync(type:string,options:any): any; export function sign(algorithm:string,data:any,key:any): any; }
 declare const process:any;

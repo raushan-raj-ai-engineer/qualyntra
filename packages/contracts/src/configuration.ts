@@ -15,4 +15,5 @@ export interface OidcIdentityConfiguration {
   groupClaim:string; organizationClaim:string; workspaceClaim?:string; projectClaim?:string; environmentClaim?:string; displayNameClaims:string[]; serviceSubjects:string[]; roleMappings:OidcRoleMappingConfiguration[];
 }
 export interface IdentityConfiguration { oidc:OidcIdentityConfiguration; }
-export interface PlatformConfiguration { host:string; port:number; dataDir:string; logLevel:'debug'|'info'|'warn'|'error'; defaultProvider:string; security:SecurityConfiguration; controlPlane:ControlPlaneConfiguration; identity:IdentityConfiguration; }
+export interface ArtifactStorageConfiguration { maxArtifactBytes:number; defaultRetentionDays:number; maxRetentionDays:number; maxDownloadGrantSeconds:number; }
+export interface PlatformConfiguration { host:string; port:number; dataDir:string; logLevel:'debug'|'info'|'warn'|'error'; defaultProvider:string; security:SecurityConfiguration; controlPlane:ControlPlaneConfiguration; identity:IdentityConfiguration; artifacts:ArtifactStorageConfiguration; }

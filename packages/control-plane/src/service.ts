@@ -12,8 +12,14 @@ import type { ExecutionRequest } from '../../contracts/src/execution';
 import type { UniversalTestResult } from '../../contracts/src/result';
 import type { IntegrationRequest } from '../../contracts/src/integration';
 import type { NotificationRequest } from '../../contracts/src/notification';
+import type { DistributedExecutionJob,DistributedExecutionQueue,JobRequirements,WorkerCapabilities,WorkerRegistration,WorkerState } from '../../contracts/src/distributed';
+import type { ArtifactKind,ArtifactRecord } from '../../contracts/src/artifact';
+import type { HealthSignal,LogRecord,MetricPoint } from '../../contracts/src/observability';
 import type { ObservabilityService } from '../../observability/src/service';
 import type { NotificationService } from '../../notifications/src/service';
+import type { DistributedExecutionCoordinator } from '../../distributed/src/coordinator';
+import type { ArtifactService } from '../../artifacts/src/service';
+import { scopeContains } from '../../governance/src/tenancy';
 import { GovernanceService } from '../../governance/src/service';
 import { IntegrationService } from '../../integrations/src/service';
 import { ApiError } from './errors';
@@ -28,6 +34,8 @@ export class ControlPlaneService{
     private readonly audit:AuditSink&AuditReader,
     private readonly observability?:ObservabilityService,
     private readonly notifications?:NotificationService,
+    private readonly distributed?:{coordinator:DistributedExecutionCoordinator;queue:DistributedExecutionQueue},
+    private readonly artifacts?:{service:ArtifactService;storageAdapterId:string},
   ){}
 
   async createRun(input:{actor:ActorIdentity;scope:TenantScope;request:ExecutionRequest;idempotencyKey?:string;correlationId:string}):Promise<{record:RunRecord;created:boolean}>{
@@ -53,4 +61,24 @@ export class ControlPlaneService{
   alertRecords(scope:TenantScope,limit?:number){if(!this.observability)throw new ApiError(503,'observability_not_configured','Observability service is not configured.');return this.observability.listAlerts(scope,limit);}
   notificationDescriptors(){return this.notifications?.list().map(adapter=>structuredClone(adapter.descriptor))??[];}
   sendNotification(adapterId:string,request:NotificationRequest){if(!this.notifications)throw new ApiError(503,'notifications_not_configured','Notification service is not configured.');return this.notifications.send(adapterId,request);}
+
+  distributedConfigured(){return Boolean(this.distributed);}
+  artifactsConfigured(){return Boolean(this.artifacts);}
+  async enqueueDistributedJob(input:{actor:ActorIdentity;scope:TenantScope;request:ExecutionRequest;requirements?:JobRequirements;maxAttempts?:number;correlationId:string;metadata?:Record<string,string>}):Promise<DistributedExecutionJob>{const distributed=this.requireDistributed();return distributed.coordinator.enqueue({scope:input.scope,request:input.request,requirements:input.requirements,maxAttempts:input.maxAttempts,actorId:input.actor.id,correlationId:input.correlationId,metadata:{...(input.metadata??{}),correlationId:input.correlationId}});}
+  async registerExecutionAgent(input:{id:string;scope:TenantScope;capabilities:WorkerCapabilities;maxConcurrency:number;state?:WorkerState;metadata?:Record<string,string>}):Promise<WorkerRegistration>{const distributed=this.requireDistributed();if(!/^worker_[A-Za-z0-9-]+$/.test(input.id))throw new ApiError(400,'worker_id_invalid','Execution-agent id is invalid.');if(!Number.isInteger(input.maxConcurrency)||input.maxConcurrency<1||input.maxConcurrency>128)throw new ApiError(400,'invalid_worker_concurrency','maxConcurrency must be between 1 and 128.');if(!Array.isArray(input.capabilities.languages)||!Array.isArray(input.capabilities.runners)||input.capabilities.runners.length===0||input.capabilities.runners.length>256)throw new ApiError(400,'invalid_worker_capabilities','Worker capabilities must include one to 256 runners and a languages array.');return distributed.coordinator.registerWorker({id:input.id,scope:input.scope,capabilities:input.capabilities,maxConcurrency:input.maxConcurrency,state:input.state,metadata:input.metadata});}
+  async heartbeatExecutionAgent(scope:TenantScope,workerId:string,state?:WorkerState){await this.requireWorkerScope(scope,workerId);return this.requireDistributed().coordinator.heartbeatWorker(workerId,state);}
+  async leaseExecutionAgentJob(scope:TenantScope,workerId:string,input:{leaseMs:number;workerStaleMs:number}){await this.requireWorkerScope(scope,workerId);this.validateLeaseTiming(input.leaseMs,input.workerStaleMs);return this.requireDistributed().queue.leaseNext(workerId,{now:new Date().toISOString(),leaseMs:input.leaseMs,workerStaleMs:input.workerStaleMs});}
+  async heartbeatExecutionLease(scope:TenantScope,jobId:string,leaseId:string,leaseMs:number){this.validateLeaseTiming(leaseMs,leaseMs);await this.requireLeaseScope(scope,jobId,leaseId);return this.requireDistributed().queue.heartbeatLease(jobId,leaseId,new Date().toISOString(),leaseMs);}
+  async markExecutionRunning(scope:TenantScope,jobId:string,leaseId:string){await this.requireLeaseScope(scope,jobId,leaseId);return this.requireDistributed().queue.markRunning(jobId,leaseId,new Date().toISOString());}
+  async completeExecutionJob(scope:TenantScope,jobId:string,leaseId:string,result:any){const job=await this.requireLeaseScope(scope,jobId,leaseId);if(!result||result.runId!==job.runId||!['passed','failed','skipped','cancelled','error'].includes(result.status))throw new ApiError(400,'invalid_execution_result','Execution result must match the leased run and contain a valid terminal status.');return this.requireDistributed().queue.complete(jobId,leaseId,result,new Date().toISOString());}
+  async failExecutionJob(scope:TenantScope,jobId:string,leaseId:string,input:{message:string;retryable:boolean;retryDelayMs?:number}){await this.requireLeaseScope(scope,jobId,leaseId);if(!input.message.trim()||input.message.length>4096)throw new ApiError(400,'invalid_execution_failure','Failure message must contain 1 to 4096 characters.');if(input.retryDelayMs!==undefined&&(!Number.isInteger(input.retryDelayMs)||input.retryDelayMs<0||input.retryDelayMs>300_000))throw new ApiError(400,'invalid_retry_delay','retryDelayMs must be between 0 and 300000.');return this.requireDistributed().queue.fail(jobId,leaseId,{...input,now:new Date().toISOString()});}
+  async storeAgentArtifact(input:{actor:ActorIdentity;scope:TenantScope;body:AsyncIterable<Uint8Array>;kind:ArtifactKind;name:string;contentType:string;runId?:string;correlationId:string}):Promise<ArtifactRecord>{if(!this.artifacts)throw new ApiError(503,'artifacts_not_configured','Artifact storage service is not configured.');return this.artifacts.service.store({storageAdapterId:this.artifacts.storageAdapterId,scope:input.scope,body:input.body,kind:input.kind,name:input.name,contentType:input.contentType,actorId:input.actor.id,correlationId:input.correlationId,runId:input.runId});}
+  listArtifacts(scope:TenantScope,page:{offset:number;limit:number;runId?:string}){if(!this.artifacts)throw new ApiError(503,'artifacts_not_configured','Artifact storage service is not configured.');return this.artifacts.service.list(scope,page);}
+  emitAgentHealth(signal:HealthSignal){if(!this.observability)throw new ApiError(503,'observability_not_configured','Observability service is not configured.');return this.observability.recordHealth(signal);}
+  emitAgentLog(record:LogRecord){if(!this.observability)throw new ApiError(503,'observability_not_configured','Observability service is not configured.');return this.observability.emitLog(record);}
+  emitAgentMetric(point:MetricPoint){if(!this.observability)throw new ApiError(503,'observability_not_configured','Observability service is not configured.');return this.observability.recordMetric(point);}
+  private requireDistributed(){if(!this.distributed)throw new ApiError(503,'distributed_execution_not_configured','Distributed execution service is not configured.');return this.distributed;}
+  private async requireWorkerScope(scope:TenantScope,workerId:string){const worker=await this.requireDistributed().queue.getWorker(workerId);if(!worker||!scopeContains(scope,worker.scope))throw new ApiError(404,'worker_not_found','Execution agent was not found in the requested tenant scope.');return worker;}
+  private async requireLeaseScope(scope:TenantScope,jobId:string,leaseId:string){const job=await this.requireDistributed().queue.getJob(jobId);if(!job||!scopeContains(scope,job.scope)||job.lease?.id!==leaseId)throw new ApiError(404,'lease_not_found','Execution lease was not found in the requested tenant scope.');return job;}
+  private validateLeaseTiming(leaseMs:number,workerStaleMs:number){if(!Number.isInteger(leaseMs)||leaseMs<5_000||leaseMs>300_000)throw new ApiError(400,'invalid_lease','leaseMs must be between 5000 and 300000.');if(!Number.isInteger(workerStaleMs)||workerStaleMs<leaseMs||workerStaleMs>900_000)throw new ApiError(400,'invalid_worker_stale','workerStaleMs must be between leaseMs and 900000.');}
 }

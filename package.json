@@ -26,7 +26,8 @@
     "control-plane": "node dist/apps/control-plane/src/server.js",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "dashboard:build": "tsc -p apps/dashboard/tsconfig.browser.json && node scripts/copy-dashboard-assets.mjs",
-    "dashboard": "node dist/apps/dashboard/src/main.js"
+    "dashboard": "node dist/apps/dashboard/src/main.js",
+    "agent": "node dist/apps/agent/src/main.js"
   },
   "devDependencies": {
     "typescript": "5.9.2"

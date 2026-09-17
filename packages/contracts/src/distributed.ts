@@ -60,19 +60,21 @@ export interface DistributedExecutionJob {
 }
 export interface LeaseOptions { now:string; leaseMs:number; workerStaleMs:number; }
 export interface DistributedQueueHealth { status:'healthy'|'degraded'|'unavailable'; queued:number; leased:number; running:number; workersOnline:number; checkedAt:string; message?:string; }
-export interface DistributedExecutionQueue {
-  enqueue(job:DistributedExecutionJob):Promise<DistributedExecutionJob>;
-  getJob(id:string):Promise<DistributedExecutionJob|undefined>;
-  cancel(id:string,now:string):Promise<DistributedExecutionJob>;
+export interface DistributedWorkerControlPlane {
   registerWorker(worker:WorkerRegistration):Promise<WorkerRegistration>;
-  getWorker(id:string):Promise<WorkerRegistration|undefined>;
-  listWorkers():Promise<WorkerRegistration[]>;
   heartbeatWorker(id:string,now:string,state?:WorkerState):Promise<WorkerRegistration>;
   leaseNext(workerId:string,options:LeaseOptions):Promise<DistributedExecutionJob|undefined>;
   heartbeatLease(jobId:string,leaseId:string,now:string,leaseMs:number):Promise<DistributedExecutionJob>;
   markRunning(jobId:string,leaseId:string,now:string):Promise<DistributedExecutionJob>;
   complete(jobId:string,leaseId:string,result:ExecutionResult,now:string):Promise<DistributedExecutionJob>;
   fail(jobId:string,leaseId:string,input:{message:string;retryable:boolean;now:string;retryDelayMs?:number}):Promise<DistributedExecutionJob>;
+}
+export interface DistributedExecutionQueue extends DistributedWorkerControlPlane {
+  enqueue(job:DistributedExecutionJob):Promise<DistributedExecutionJob>;
+  getJob(id:string):Promise<DistributedExecutionJob|undefined>;
+  cancel(id:string,now:string):Promise<DistributedExecutionJob>;
+  getWorker(id:string):Promise<WorkerRegistration|undefined>;
+  listWorkers():Promise<WorkerRegistration[]>;
   recoverExpired(now:string):Promise<{requeued:string[];deadLettered:string[];workersOffline:string[]}>;
   health(now:string,workerStaleMs:number):Promise<DistributedQueueHealth>;
 }

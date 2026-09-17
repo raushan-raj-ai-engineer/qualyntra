@@ -1,0 +1,15 @@
+# File: .dockerignore
+# Purpose: Keeps local secrets, generated outputs, caches, and repository metadata out of execution-agent container build context.
+# Author: Raushan Raj
+.git
+.github
+.env
+.env.*
+node_modules
+dist
+.qualyntra
+.qualyntra-agent
+artifacts
+coverage
+*.log
+*.zip

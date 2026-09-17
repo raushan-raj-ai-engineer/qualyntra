@@ -6,12 +6,13 @@
 import type { TenantScope } from '../../contracts/src/governance';
 import type { PageRequest } from '../../contracts/src/control-plane';
 import { ApiError } from './errors';
+import { validateScope } from '../../governance/src/tenancy';
 
 export function header(req:any,name:string):string|undefined{const value=req.headers?.[name.toLowerCase()];return Array.isArray(value)?value[0]:typeof value==='string'?value:undefined;}
 export function tenantScope(req:any):TenantScope{
   const organizationId=header(req,'x-qualyntra-organization-id');
   if(!organizationId?.trim())throw new ApiError(400,'tenant_context_required','x-qualyntra-organization-id is required.');
-  return{organizationId:organizationId.trim(),workspaceId:header(req,'x-qualyntra-workspace-id')?.trim()||undefined,projectId:header(req,'x-qualyntra-project-id')?.trim()||undefined,environmentId:header(req,'x-qualyntra-environment-id')?.trim()||undefined};
+  const scope={organizationId:organizationId.trim(),workspaceId:header(req,'x-qualyntra-workspace-id')?.trim()||undefined,projectId:header(req,'x-qualyntra-project-id')?.trim()||undefined,environmentId:header(req,'x-qualyntra-environment-id')?.trim()||undefined};try{validateScope(scope);return scope;}catch(error){throw new ApiError(400,'invalid_tenant_context',error instanceof Error?error.message:'Tenant scope is invalid.');}
 }
 export function pagination(url:URL,maxLimit=100):PageRequest{
   const offset=Number(url.searchParams.get('offset')??'0');const defaultLimit=Math.min(50,maxLimit);const limit=Number(url.searchParams.get('limit')??String(defaultLimit));
