@@ -43,6 +43,13 @@ public final class Bridge {
                     stringOr(payload.get("contentType"), "application/octet-stream")
                 ).toMap()
             );
+            case "automation.health" -> AutomationSupport.healthAll();
+            case "automation.execute" -> Map.of(
+                "result",
+                new AutomationExecutor(AutomationFactory::create)
+                    .execute(AutomationModels.planFromMap(objectRequired(payload, "plan")))
+                    .toMap()
+            );
             default -> throw new IllegalArgumentException("Unsupported bridge operation: " + operation);
         };
     }
@@ -69,6 +76,13 @@ public final class Bridge {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> object(Object value) {
         return value instanceof Map<?, ?> map ? (Map<String, Object>) map : Map.of("language", "java", "runner", "unknown");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> objectRequired(Map<String, Object> payload, String key) {
+        Object value = payload.get(key);
+        if (!(value instanceof Map<?, ?> map)) throw new IllegalArgumentException(key + " must be an object");
+        return (Map<String, Object>) map;
     }
 
     private static String requiredString(Map<String, Object> payload, String key) {

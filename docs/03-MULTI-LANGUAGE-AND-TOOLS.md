@@ -33,3 +33,7 @@ The Python integration uses a runtime adapter plus a dependency-free SDK and JSO
 ### Java runtime boundary
 
 The Java integration mirrors the Python architecture: the control plane talks to a language-specific boundary instead of importing Java frameworks into core. JVM/Javac discovery is independent from JUnit/TestNG classpath discovery, and result ingestion is secured against external XML entities. Maven/Gradle are optional project concerns rather than Qualyntra runtime requirements.
+
+## Java automation adapters
+
+Java Playwright and Selenium consume the same portable automation plan as Python and return the same normalized result/evidence model. Vendor libraries remain optional execution-project dependencies discovered at runtime. See `docs/19-JAVA-AUTOMATION-ADAPTERS.md`.

@@ -31,3 +31,7 @@ Author: Raushan Raj
 | `tests` | Product contract tests |
 | `scripts` | Quality/release audits |
 
+
+- `adapters/automation/java-bridge/`: Node-to-Java JSON bridge for Playwright/Selenium Java execution.
+- `sdks/java/.../Automation*`, `PlaywrightJavaEngine`, `SeleniumJavaEngine`: dependency-optional Java automation execution.
+- `tests/java-automation/`: Node-side Java automation bridge contract tests.

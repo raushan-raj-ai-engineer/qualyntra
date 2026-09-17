@@ -27,3 +27,5 @@ node scripts/release-validate.mjs
 
 Read `01-ARCHITECTURE.md`, then `04-ADAPTER-SDK.md`, `05-LLM-TESTING.md`, `08-RELEASE-VALIDATION.md`, `16-PYTHON-RUNTIME.md`, `17-PYTHON-AUTOMATION-ADAPTERS.md`, and `18-JAVA-RUNTIME.md`.
 
+
+- `docs/19-JAVA-AUTOMATION-ADAPTERS.md` — Java Playwright/Selenium execution adapters and safety model.
