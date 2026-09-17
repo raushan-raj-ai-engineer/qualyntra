@@ -63,3 +63,6 @@ Qualyntra supports standards-based OIDC discovery/JWKS JWT verification, multi-i
 
 ## Enterprise integrations
 GitHub, Azure DevOps, Jira, and Jenkins are implemented as secret-referenced, network-policy-governed REST adapters with idempotency/retry controls, rate-limit metadata, webhook verification boundaries, and audit evidence. See `docs/26-ENTERPRISE-INTEGRATIONS.md`.
+
+## Distributed execution
+Qualyntra includes vendor-neutral worker, lease, heartbeat, retry, recovery, and capability-matching contracts for horizontal execution without binding the platform to a specific queue or cluster vendor. See `docs/27-DISTRIBUTED-EXECUTION.md`.

@@ -1,0 +1,20 @@
+{
+  "x-file-purpose": "Defines the machine-readable contract for distributed execution jobs and worker-selection requirements.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Qualyntra Distributed Execution Job",
+  "type": "object",
+  "required": ["id", "runId", "scope", "request", "requirements", "state", "attempt", "maxAttempts", "createdAt", "updatedAt", "availableAt"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "scope": {"type": "object", "required": ["organizationId"]},
+    "requirements": {"type": "object"},
+    "state": {"enum": ["queued", "leased", "running", "succeeded", "failed", "cancelled", "dead-letter"]},
+    "attempt": {"type": "integer", "minimum": 0},
+    "maxAttempts": {"type": "integer", "minimum": 1},
+    "createdAt": {"type": "string"},
+    "updatedAt": {"type": "string"},
+    "availableAt": {"type": "string"}
+  }
+}

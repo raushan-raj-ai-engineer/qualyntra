@@ -1,0 +1,9 @@
+/**
+ * File: tests/distributed/coordinator.test.ts
+ * Purpose: Verifies secure job creation, worker registration, and audit behavior at the distributed execution coordination boundary.
+ * Author: Raushan Raj
+ */
+import test from 'node:test';import assert from 'node:assert/strict';import { DistributedExecutionCoordinator } from '../../packages/distributed/src/coordinator';import { InMemoryDistributedExecutionQueue } from '../../packages/distributed/src/in-memory-queue';import { InMemoryAuditLog } from '../../packages/governance/src/audit-log';
+const scope={organizationId:'o1',projectId:'p1'};
+test('coordinator derives requirements and rejects persisted raw environment secrets',async()=>{const queue=new InMemoryDistributedExecutionQueue();const audit=new InMemoryAuditLog();const c=new DistributedExecutionCoordinator(queue,undefined,audit);await assert.rejects(()=>c.enqueue({scope,request:{runId:'r1',projectId:'p1',runtime:{language:'python',runner:'pytest'},env:{TOKEN:'secret'}}}),/secretRefs/);const created=await c.enqueue({scope,actorId:'svc',correlationId:'c1',request:{runId:'r2',projectId:'p1',runtime:{language:'python',runner:'pytest',engine:'selenium'}}});assert.deepEqual(created.requirements,{language:'python',runner:'pytest',engine:'selenium'});const records=await audit.list(scope);assert.equal(records.at(-1)?.action,'distributed.job.enqueue');assert.equal(JSON.stringify(records).includes('secret'),false);});
+test('worker registration starts with zero active leases regardless of caller input',async()=>{const q=new InMemoryDistributedExecutionQueue();const c=new DistributedExecutionCoordinator(q);const worker=await c.registerWorker({id:'w1',scope,capabilities:{languages:['python'],runners:['pytest']},maxConcurrency:2});assert.equal(worker.activeLeases,0);assert.equal(worker.state,'online');});
