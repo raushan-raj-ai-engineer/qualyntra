@@ -5,7 +5,7 @@
   "info": {
     "title": "Qualyntra Control Plane API",
     "version": "1.0.0",
-    "description": "Vendor-neutral tenant-aware API for runs, results, evaluations, governance, adapters, and integrations."
+    "description": "Vendor-neutral tenant-aware API for runs, results, evaluations, governance, adapters, integrations, observability, alerts, and notifications."
   },
   "servers": [
     {
@@ -151,6 +151,56 @@
           "payload": {
             "type": "object",
             "additionalProperties": true
+          }
+        }
+      },
+      "NotificationActionRequest": {
+        "type": "object",
+        "required": [
+          "title",
+          "message",
+          "severity"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "links": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "url"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -554,6 +604,131 @@
                 "$ref": "#/components/schemas/IntegrationActionRequest"
               }
             }
+          }
+        }
+      }
+    },
+    "/observability/summary": {
+      "get": {
+        "summary": "Get tenant-scoped observability summary",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/WorkspaceId"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/EnvironmentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Telemetry, health, and alert summary"
+          }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "summary": "List recent tenant-scoped alerts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/WorkspaceId"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/EnvironmentId"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alert records"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "List notification adapter descriptors",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/WorkspaceId"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/EnvironmentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification adapters"
+          }
+        }
+      }
+    },
+    "/notifications/{id}/actions": {
+      "post": {
+        "summary": "Send a notification through a registered adapter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationId"
+          },
+          {
+            "$ref": "#/components/parameters/WorkspaceId"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/EnvironmentId"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification delivery response"
           }
         }
       }

@@ -12,3 +12,4 @@ declare module 'node:crypto' { export function randomUUID(): string; export func
 declare const process:any;
 declare const Buffer:any;
 declare const require:any;
+declare module 'node:async_hooks' { export class AsyncLocalStorage<T>{ run<R>(store:T,callback:()=>R):R; getStore():T|undefined; } }
