@@ -1,0 +1,40 @@
+{
+  "x-file-purpose": "Defines configuration for safely ingesting external framework result artifacts into Qualyntra.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Qualyntra Result Ingestion Request",
+  "type": "object",
+  "required": ["runId", "runtime"],
+  "properties": {
+    "runId": {"type": "string", "minLength": 1},
+    "format": {"type": "string", "minLength": 1},
+    "path": {"type": "string", "minLength": 1},
+    "content": {"type": "string"},
+    "contentType": {"type": "string"},
+    "allowedRoot": {"type": "string"},
+    "deduplicate": {"type": "boolean", "default": false},
+    "runtime": {
+      "type": "object",
+      "required": ["language", "runner"],
+      "properties": {
+        "language": {"type": "string", "minLength": 1},
+        "runner": {"type": "string", "minLength": 1},
+        "runnerVersion": {"type": "string"},
+        "engine": {"type": "string"},
+        "engineVersion": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "maxBytes": {"type": "integer", "minimum": 1},
+        "maxResults": {"type": "integer", "minimum": 1},
+        "failOnEmpty": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "anyOf": [{"required": ["path"]}, {"required": ["content"]}],
+  "additionalProperties": false
+}

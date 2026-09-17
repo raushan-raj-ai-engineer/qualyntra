@@ -17,6 +17,7 @@ Author: Raushan Raj
 | `packages/evaluation` | Provider-neutral LLM/RAG/agent evaluation, metric registry, judge consensus, telemetry and release gates |
 | `packages/providers` | Vendor-neutral model aliases, routing, retry/fallback, transport, normalized errors, telemetry and cost metadata |
 | `packages/reporting` | Unified quality aggregation |
+| `packages/ingestion` | Vendor-neutral safe loading, detection, limits, metadata and normalization policy for external results |
 | `packages/security` | Redaction/network policy |
 | `packages/configuration` | Environment-derived configuration |
 | `adapters/runtimes` | Language/runtime discovery, lifecycle and health adapters for Python, Java and future runtimes |
@@ -35,3 +36,6 @@ Author: Raushan Raj
 - `adapters/automation/java-bridge/`: Node-to-Java JSON bridge for Playwright/Selenium Java execution.
 - `sdks/java/.../Automation*`, `PlaywrightJavaEngine`, `SeleniumJavaEngine`: dependency-optional Java automation execution.
 - `tests/java-automation/`: Node-side Java automation bridge contract tests.
+
+- `adapters/results/default-registry/`: prioritized built-in result format detection/wiring.
+- `tests/ingestion/`: external result adapter, registry and ingestion-safety contract tests.

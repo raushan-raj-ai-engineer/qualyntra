@@ -17,7 +17,7 @@ Qualyntra does not translate test code between languages at runtime. It normaliz
 
 ### Integration levels
 
-1. **Result ingestion:** JUnit XML -> universal result -> reporting/intelligence.
+1. **Result ingestion:** JUnit XML, TRX, Allure JSON, Cucumber JSON and Robot XML -> universal result -> reporting/intelligence.
 2. **Runner orchestration:** external process adapter controls execution.
 3. **Deep automation integration:** optional tool-specific plugin can expose evidence/healing/generation semantics.
 
@@ -41,3 +41,7 @@ Java Playwright and Selenium consume the same portable automation plan as Python
 ## Mobile automation
 
 Appium is integrated through a language-neutral W3C WebDriver/Appium protocol adapter. Android and iOS use the same Qualyntra automation/result/evidence contracts, while platform-specific capabilities remain deployment configuration.
+
+## External framework onboarding
+
+Existing suites can onboard through result artifacts before adopting Qualyntra execution adapters. See `docs/21-EXTERNAL-RESULT-INGESTION.md`.

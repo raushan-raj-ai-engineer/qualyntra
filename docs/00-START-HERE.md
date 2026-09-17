@@ -31,3 +31,5 @@ Read `01-ARCHITECTURE.md`, then `04-ADAPTER-SDK.md`, `05-LLM-TESTING.md`, `08-RE
 - `docs/19-JAVA-AUTOMATION-ADAPTERS.md` — Java Playwright/Selenium execution adapters and safety model.
 
 - `20-MOBILE-APPIUM-RUNTIME.md` — Android/iOS Appium runtime, execution, security, and evidence model.
+
+- `21-EXTERNAL-RESULT-INGESTION.md` — safe JUnit/TRX/Allure/Cucumber/Robot onboarding into the universal result model.
