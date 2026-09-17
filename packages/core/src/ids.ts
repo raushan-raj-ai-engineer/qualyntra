@@ -1,6 +1,7 @@
 /**
  * File: packages/core/src/ids.ts
- * Purpose: Provides dependency-free runtime identifier generation.
+ * Purpose: Provides dependency-free cryptographically strong runtime identifier generation.
  * Author: Raushan Raj
  */
-export function createId(prefix='q'):string { const random=Math.random().toString(36).slice(2,12); return `${prefix}_${Date.now().toString(36)}_${random}`; }
+import { randomUUID } from 'node:crypto';
+export function createId(prefix='q'):string { return `${prefix}_${randomUUID()}`; }
