@@ -10,5 +10,7 @@ find "$ROOT/sdks/java/src/main/java" "$ROOT/sdks/java/src/test/java" -name '*.ja
 java -cp "$OUT" io.qualyntra.sdk.ContractSmoke
 java -cp "$OUT" io.qualyntra.sdk.BridgeSmoke
 java -cp "$OUT" io.qualyntra.sdk.ResultSmoke
+java -cp "$OUT" io.qualyntra.sdk.AutomationSmoke
 printf '%s\n' '{"operation":"health"}' | java -cp "$OUT" io.qualyntra.sdk.Bridge | grep -q '"ok":true'
+printf '%s\n' '{"operation":"automation.health"}' | java -cp "$OUT" io.qualyntra.sdk.Bridge | grep -q '"ok":true'
 echo "Java SDK validation passed"
