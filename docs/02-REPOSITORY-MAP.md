@@ -10,7 +10,7 @@ Author: Raushan Raj
 |---|---|
 | `apps/cli` | Local developer/operator commands |
 | `apps/control-plane` | HTTP control-plane boundary |
-| `apps/dashboard` | UI boundary/documentation |
+| `apps/dashboard` | Secure browser SPA, same-origin BFF proxy, server-side session boundary and product views |
 | `packages/contracts` | Stable cross-language contracts |
 | `packages/core` | Adapter registry, capability model, core events/IDs |
 | `packages/execution` | Runner-neutral orchestration |
@@ -57,3 +57,7 @@ Author: Raushan Raj
 
 - `packages/artifacts/`: artifact catalog, integrity verification, retention, audited grant and lifecycle services.
 - `adapters/storage/`: local filesystem plus SDK-neutral S3-compatible and Azure Blob object-storage boundaries.
+
+- `apps/dashboard/web/`: credential-free browser TypeScript SPA.
+- `apps/dashboard/src/`: dashboard HTTP/BFF server and injectable session resolvers.
+- `schemas/dashboard-runtime-config.schema.json`: non-secret browser runtime configuration contract.

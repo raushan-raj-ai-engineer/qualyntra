@@ -1,0 +1,23 @@
+{
+  "x-file-purpose": "Compiles the dependency-light browser dashboard as standards-based ES modules without coupling the platform to a front-end vendor.",
+  "x-author": "Raushan Raj",
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "rootDir": "web",
+    "outDir": "../../dist/apps/dashboard/public",
+    "declaration": false,
+    "sourceMap": false,
+    "types": []
+  },
+  "include": [
+    "web/**/*.ts"
+  ],
+  "exclude": []
+}

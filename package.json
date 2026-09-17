@@ -12,7 +12,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "npm run clean && tsc -p tsconfig.json && npm run dashboard:build",
     "test": "npm run build && node --test dist/tests/**/*.test.js",
     "test:unit": "npm run test",
     "audit:architecture": "node scripts/audit-architecture.mjs",
@@ -24,7 +24,9 @@
     "validate": "npm run typecheck && npm run test && npm run audit:architecture && npm run audit:headers && npm run audit:hardcoding && npm run audit:schemas && npm run compatibility:check",
     "cli": "node dist/apps/cli/src/main.js",
     "control-plane": "node dist/apps/control-plane/src/server.js",
-    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "dashboard:build": "tsc -p apps/dashboard/tsconfig.browser.json && node scripts/copy-dashboard-assets.mjs",
+    "dashboard": "node dist/apps/dashboard/src/main.js"
   },
   "devDependencies": {
     "typescript": "5.9.2"
