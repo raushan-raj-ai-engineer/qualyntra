@@ -5,6 +5,8 @@
  */
 import type { ControlPlaneRepository,EvaluationRecord,PageRequest,PageResponse,RunRecord,StoredReleaseDecision } from '../../contracts/src/control-plane';
 import type { ReleasePolicy,TenantScope } from '../../contracts/src/governance';
+import type { ExecutionStatus } from '../../contracts/src/execution';
+import { OptimisticConcurrencyError } from '../../persistence/src/errors';
 import type { UniversalTestResult } from '../../contracts/src/result';
 import { scopeContains } from '../../governance/src/tenancy';
 
@@ -25,6 +27,7 @@ export class InMemoryControlPlaneRepository implements ControlPlaneRepository{
   async findRunByIdempotency(scope:TenantScope,key:string):Promise<RunRecord|undefined>{for(const record of this.runs.values())if(record.idempotencyKey===key&&sameScope(scope,record.scope))return clone(record);return undefined;}
   async getRun(id:string,scope:TenantScope):Promise<RunRecord|undefined>{const record=this.runs.get(id);return record&&visible(scope,record.scope)?clone(record):undefined;}
   async listRuns(scope:TenantScope,request:PageRequest):Promise<PageResponse<RunRecord>>{const items=[...this.runs.values()].filter(item=>visible(scope,item.scope)).sort((a,b)=>a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id));return page(items,request);}
+  async updateRunStatus(id:string,scope:TenantScope,expectedVersion:number,status:ExecutionStatus):Promise<RunRecord>{const record=this.runs.get(id);if(!record||!visible(scope,record.scope))throw new Error(`Run not found: ${id}`);if(record.version!==expectedVersion)throw new OptimisticConcurrencyError('run',id,expectedVersion);const updated={...record,status,updatedAt:new Date().toISOString(),version:record.version+1};this.runs.set(id,updated);return clone(updated);}
   async saveResults(runId:string,scope:TenantScope,results:UniversalTestResult[]):Promise<void>{const run=await this.getRun(runId,scope);if(!run)throw new Error(`Run not found: ${runId}`);this.results.set(runId,results.map(clone));}
   async listResults(runId:string,scope:TenantScope,request:PageRequest):Promise<PageResponse<UniversalTestResult>>{const run=await this.getRun(runId,scope);if(!run)throw new Error(`Run not found: ${runId}`);return page(this.results.get(runId)??[],request);}
   async createEvaluation(record:EvaluationRecord):Promise<EvaluationRecord>{if(this.evaluations.has(record.id))throw new Error(`Evaluation already exists: ${record.id}`);this.evaluations.set(record.id,clone(record));return clone(record);}

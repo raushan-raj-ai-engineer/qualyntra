@@ -74,6 +74,7 @@ export interface AuditRecord {
 export interface AuditSink {
   append(record:Omit<AuditRecord,'sequence'|'previousHash'|'hash'>):Promise<AuditRecord>;
 }
+export interface AuditReader { list(scope?:TenantScope):Promise<AuditRecord[]>; }
 
 export type PolicyOperator='eq'|'neq'|'gt'|'gte'|'lt'|'lte'|'exists';
 export type PolicySeverity='block'|'review';

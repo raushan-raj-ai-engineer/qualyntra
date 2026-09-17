@@ -53,3 +53,6 @@ Qualyntra includes tenant-scoped RBAC, evidence-backed release policies, tamper-
 ## Control Plane API
 
 Qualyntra includes a versioned `/api/v1` control plane with bearer authentication, tenant-scoped RBAC, idempotent run creation, governance/release endpoints, rate limits, safe errors, and storage-neutral repositories. See `docs/23-CONTROL-PLANE-API.md`.
+
+## Persistence foundation
+Durable storage remains adapter-based. The reference PostgreSQL adapter provides tenant-safe repositories, optimistic concurrency, immutable checksummed migrations, durable idempotency, and transactionally serialized audit chains. See `docs/24-PERSISTENCE-FOUNDATION.md`.
