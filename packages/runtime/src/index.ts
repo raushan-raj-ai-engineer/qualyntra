@@ -6,3 +6,5 @@
 export * from './compatibility';
 export * from './runtime-manager';
 export * from './registry-loader';
+
+export * from './process-probe';

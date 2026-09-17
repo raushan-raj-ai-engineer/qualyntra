@@ -64,6 +64,8 @@ export interface RuntimeHealth extends AdapterHealth {
   lifecycle: RuntimeLifecycleState;
   identity: RuntimeInstanceIdentity;
   compatibility: RuntimeCompatibility;
+  components?: RuntimeCompatibility[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface RuntimeAdapter extends Adapter {
