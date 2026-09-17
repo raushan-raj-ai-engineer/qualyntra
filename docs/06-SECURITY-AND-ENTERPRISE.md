@@ -36,6 +36,18 @@ See `22-ENTERPRISE-GOVERNANCE.md`.
 
 See `25-ENTERPRISE-IDENTITY.md`.
 
+### Enterprise integrations now implemented
+
+- GitHub, Azure DevOps, Jira, and Jenkins adapters remain outside protected platform packages.
+- Credentials are resolved from `SecretReference` values; URLs with embedded credentials are rejected.
+- Outbound calls obey the existing deny-by-default network policy.
+- Duplicate-sensitive mutations require idempotency keys and support injectable dedupe persistence.
+- Retry behavior is bounded and enabled only for explicitly idempotent mutations.
+- Integration audit evidence excludes request payloads and secret values.
+- HMAC-SHA256 webhook verification is provided through a vendor-neutral verifier boundary.
+
+See `26-ENTERPRISE-INTEGRATIONS.md`.
+
 ### Required before broad commercial deployment
 
 The v1.0 codebase establishes extension points but production SaaS/on-prem distribution should still add independently reviewed browser SSO/BFF flows where needed, optional SAML/SCIM, ABAC, audit-log WORM/retention options, encryption/KMS/BYOK, retention/deletion policies, signed artifacts, SBOM/provenance, vulnerability scanning, license scanning, backup/restore, HA/DR and formal threat modeling.

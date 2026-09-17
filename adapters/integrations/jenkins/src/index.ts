@@ -1,0 +1,20 @@
+/**
+ * File: adapters/integrations/jenkins/src/index.ts
+ * Purpose: Implements Jenkins build triggering through the Remote Access API using API-token authentication and configurable endpoints.
+ * Author: Raushan Raj
+ */
+import type { AdapterHealth,IntegrationAdapter,IntegrationRequest,IntegrationResponse,NetworkPolicy,SecretReference } from '../../../../packages/contracts/src';
+import type { SecretResolverRegistry } from '../../../../packages/security/src/secrets';
+import { assertNetworkAllowed } from '../../../../packages/security/src/network-policy';
+import { FetchIntegrationHttpTransport,type IntegrationHttpTransport } from '../../../../packages/integrations/src/http';
+import { dedupe,InMemoryIntegrationDedupeStore,type IntegrationDedupeStore } from '../../../../packages/integrations/src/dedupe';
+import { withIntegrationRetry,type IntegrationRetryPolicy } from '../../../../packages/integrations/src/retry';
+import { basicHeader,encodeSegment,endpoint,rateLimit,requiredString } from '../../../../packages/integrations/src/utils';
+
+export interface JenkinsIntegrationOptions{id?:string;baseUrl:string;username:string;apiToken:SecretReference;secrets:SecretResolverRegistry;networkPolicy:NetworkPolicy;transport?:IntegrationHttpTransport;timeoutMs?:number;headers?:Record<string,string>;retryPolicy?:IntegrationRetryPolicy;dedupeStore?:IntegrationDedupeStore;}
+export class JenkinsIntegrationAdapter implements IntegrationAdapter{
+  readonly descriptor;private readonly transport;private readonly dedupeStore;
+  constructor(private readonly options:JenkinsIntegrationOptions){this.descriptor={id:options.id??'jenkins',kind:'integration' as const,version:'1.0.0',displayName:'Jenkins',description:'Jenkins build trigger integration',capabilities:['trigger-build'],supportedTools:['jenkins']};this.transport=options.transport??new FetchIntegrationHttpTransport();this.dedupeStore=options.dedupeStore??new InMemoryIntegrationDedupeStore();}
+  async health():Promise<AdapterHealth>{try{const url=endpoint(this.options.baseUrl,'api/json');assertNetworkAllowed(url,this.options.networkPolicy);return{status:'healthy',message:'configured; no remote health request performed',checkedAt:new Date().toISOString()};}catch(error){return{status:'unavailable',message:error instanceof Error?error.message:'invalid configuration',checkedAt:new Date().toISOString()};}}
+  async execute(request:IntegrationRequest):Promise<IntegrationResponse>{if(request.operation!=='trigger-build')throw new Error(`Jenkins integration does not support operation: ${request.operation}`);if(!request.idempotencyKey)throw new Error('Jenkins trigger-build requires idempotencyKey to prevent duplicate builds');const jobPath=requiredString(request.payload,'jobPath');const parameters=request.payload.parameters&&typeof request.payload.parameters==='object'?request.payload.parameters as Record<string,unknown>:undefined;const segments=jobPath.split('/').map(v=>v.trim()).filter(Boolean);if(!segments.length)throw new Error('Jenkins jobPath is empty');const encoded=segments.map(v=>`job/${encodeSegment(v)}`).join('/');const path=parameters?`${encoded}/buildWithParameters`:`${encoded}/build`;const body=parameters?new URLSearchParams(Object.entries(parameters).map(([k,v])=>[k,String(v)])).toString():'';const key=`${this.descriptor.id}:${request.scope.organizationId}:${request.operation}:${request.idempotencyKey}`;return dedupe(this.dedupeStore,key,async()=>withIntegrationRetry(async()=>{const url=endpoint(this.options.baseUrl,path);assertNetworkAllowed(url,this.options.networkPolicy);const response=await this.transport.request({adapterId:this.descriptor.id,url,method:'POST',headers:{authorization:await basicHeader(this.options.secrets,this.options.apiToken,this.options.username),...(parameters?{'content-type':'application/x-www-form-urlencoded'}:{}),...this.options.headers},body:body||undefined,timeoutMs:this.options.timeoutMs});const location=response.headers.location;return{ok:true,uri:location,requestId:response.headers['x-request-id'],rateLimit:rateLimit(response.headers),metadata:{status:response.status}};},{idempotent:true,policy:this.options.retryPolicy}));}
+}
