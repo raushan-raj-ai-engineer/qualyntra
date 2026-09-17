@@ -20,6 +20,7 @@ export type GovernancePermission=
   |'governance.read'
   |'governance.manage'
   |'integrations.manage'
+  |'notifications.manage'
   |'secrets.resolve'
   |'release.evaluate'
   |'release.approve'

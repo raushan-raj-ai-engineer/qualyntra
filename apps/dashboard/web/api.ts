@@ -10,6 +10,7 @@ export interface EvaluationRecord {id:string;profileId:string;datasetId:string;s
 export interface AdapterDescriptor {id:string;kind:string;displayName?:string;version?:string;capabilities?:string[];}
 export interface AuditRecord {id:string;timestamp:string;actorId:string;action:string;resource:string;outcome:string;}
 export interface RuntimeConfig {apiBase:string;defaultScope?:Partial<TenantScope>;}
+export interface ObservabilitySummary { counts:{logs:number;metrics:number;spans:number;health:number;alerts:number};health:{healthy:number;degraded:number;unavailable:number};latestAlerts:Array<{id:string;ruleName:string;metric:string;observedValue:number;threshold:number;severity:string;triggeredAt:string;status:string}>; }
 
 export class DashboardApiError extends Error{
   constructor(public readonly status:number,public readonly code:string,message:string,public readonly correlationId?:string){super(message);this.name='DashboardApiError';}

@@ -11,6 +11,9 @@ import type { ActorIdentity,EvidenceFact,PolicyException,ReleaseApproval,Release
 import type { ExecutionRequest } from '../../contracts/src/execution';
 import type { UniversalTestResult } from '../../contracts/src/result';
 import type { IntegrationRequest } from '../../contracts/src/integration';
+import type { NotificationRequest } from '../../contracts/src/notification';
+import type { ObservabilityService } from '../../observability/src/service';
+import type { NotificationService } from '../../notifications/src/service';
 import { GovernanceService } from '../../governance/src/service';
 import { IntegrationService } from '../../integrations/src/service';
 import { ApiError } from './errors';
@@ -23,6 +26,8 @@ export class ControlPlaneService{
     private readonly adapters:AdapterRegistry,
     private readonly integrations:IntegrationService,
     private readonly audit:AuditSink&AuditReader,
+    private readonly observability?:ObservabilityService,
+    private readonly notifications?:NotificationService,
   ){}
 
   async createRun(input:{actor:ActorIdentity;scope:TenantScope;request:ExecutionRequest;idempotencyKey?:string;correlationId:string}):Promise<{record:RunRecord;created:boolean}>{
@@ -42,4 +47,10 @@ export class ControlPlaneService{
   adapterDescriptors(kind?:string){return this.adapters.list(kind as any).map(adapter=>structuredClone(adapter.descriptor));}
   async executeIntegration(adapterId:string,request:IntegrationRequest){return this.integrations.execute(adapterId,request);}
   auditRecords(scope:TenantScope){return this.audit.list(scope);}
+  observabilityConfigured(){return Boolean(this.observability);}
+  notificationsConfigured(){return Boolean(this.notifications);}
+  observabilitySummary(scope:TenantScope){if(!this.observability)throw new ApiError(503,'observability_not_configured','Observability service is not configured.');return this.observability.summary(scope);}
+  alertRecords(scope:TenantScope,limit?:number){if(!this.observability)throw new ApiError(503,'observability_not_configured','Observability service is not configured.');return this.observability.listAlerts(scope,limit);}
+  notificationDescriptors(){return this.notifications?.list().map(adapter=>structuredClone(adapter.descriptor))??[];}
+  sendNotification(adapterId:string,request:NotificationRequest){if(!this.notifications)throw new ApiError(503,'notifications_not_configured','Notification service is not configured.');return this.notifications.send(adapterId,request);}
 }

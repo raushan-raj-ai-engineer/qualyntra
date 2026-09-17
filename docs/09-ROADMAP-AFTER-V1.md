@@ -16,7 +16,7 @@ Author: Raushan Raj
 - Native RAG faithfulness/relevance and agent trajectory metrics.
 - Multi-judge consensus and calibration datasets.
 - Prompt-injection/red-team/security suites.
-- OpenTelemetry telemetry adapters.
+- Expand the implemented vendor-neutral observability contracts with OTLP/OpenTelemetry exporters, durable telemetry backends, SLOs and richer dashboard visualizations.
 - Kubernetes/distributed execution agent.
 - Signed plugin marketplace/adapter SDK packaging.
 - Continue enterprise identity with browser BFF/PKCE and optional SAML/SCIM; RBAC/tenancy and OIDC/JWT API identity are implemented foundations. Add KMS/BYOK, audit retention and formal compliance controls.

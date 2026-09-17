@@ -22,3 +22,6 @@ export * from './identity';
 export * from './distributed';
 
 export * from './artifact';
+
+export * from './observability';
+export * from './notification';
