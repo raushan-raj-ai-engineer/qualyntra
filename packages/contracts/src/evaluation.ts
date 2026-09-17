@@ -16,6 +16,7 @@ export interface ModelRequest {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  timeoutMs?: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -28,6 +29,10 @@ export interface ModelResponse {
   outputTokens?: number;
   costUsd?: number;
   raw?: unknown;
+  totalTokens?: number;
+  requestId?: string;
+  retryCount?: number;
+  fallbackUsed?: boolean;
 }
 
 export interface ModelProviderCapabilities {
@@ -44,7 +49,10 @@ export type ProviderHealthStatus = 'healthy' | 'degraded' | 'unavailable';
 export interface ProviderHealth {
   status: ProviderHealthStatus;
   message?: string;
+  latencyMs?: number;
+  checkedAt?: string;
 }
+
 
 export interface ModelProviderAdapter {
   readonly id: string;

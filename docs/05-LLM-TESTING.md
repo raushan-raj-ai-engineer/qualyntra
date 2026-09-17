@@ -10,7 +10,7 @@ LLM testing is a first-class platform domain, not a sidecar. The authoritative e
 
 ## Provider model
 
-`ModelProviderAdapter` supports multiple providers and ordered failover. `OpenAICompatibleProvider` covers endpoints that implement the chat-completions shape; `CustomModelProvider` allows internal enterprise models. Credentials come from the environment or the customer secret store.
+`ModelProviderAdapter` remains the stable evaluation boundary. `packages/providers` adds logical model aliases, capability-aware routing, health-aware fallback, bounded retries, normalized errors, telemetry, and externally supplied cost metadata. Vendor adapters include OpenAI Responses, Azure OpenAI, Anthropic, Gemini, Amazon Bedrock, Ollama, vLLM/OpenAI-compatible endpoints, and custom enterprise providers. Credentials and physical model names are injected by configuration or a customer secret store; the protected kernel contains neither.
 
 The **system under test** and **judge** are intentionally separate. A model can be evaluated by another approved provider, deterministic metrics, custom business rules, or a quorum of multiple judges.
 
@@ -51,3 +51,8 @@ Dataset runs can gate on:
 - maximum P95 evaluation latency.
 
 Metric telemetry also tracks judge calls and token usage when providers expose that data.
+
+
+## Provider routing
+
+Evaluation profiles should depend on logical aliases such as `quality-judge` rather than physical vendor model names. `RoutedModelProvider` allows any alias route to be passed directly into existing LLM judge metrics. See `15-MULTI-LLM-PROVIDERS.md`.
