@@ -19,6 +19,11 @@
       "candidate": null,
       "policy": "adapter-runtime-owned"
     },
+    "java": {
+      "certified": [],
+      "candidate": null,
+      "policy": "sdk-runtime-owned"
+    },
     "python": {
       "certified": [],
       "candidate": null,
@@ -30,6 +35,11 @@
       "policy": "sdk-runtime-owned"
     },
     "junit": {
+      "certified": [],
+      "candidate": null,
+      "policy": "sdk-runtime-owned"
+    },
+    "testng": {
       "certified": [],
       "candidate": null,
       "policy": "sdk-runtime-owned"

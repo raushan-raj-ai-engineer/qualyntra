@@ -25,5 +25,5 @@ Qualyntra v1.0.0 is a **single private product repository**, not a sequence of v
 node scripts/release-validate.mjs
 ```
 
-Read `01-ARCHITECTURE.md`, then `04-ADAPTER-SDK.md`, `05-LLM-TESTING.md`, and `08-RELEASE-VALIDATION.md`.
+Read `01-ARCHITECTURE.md`, then `04-ADAPTER-SDK.md`, `05-LLM-TESTING.md`, `08-RELEASE-VALIDATION.md`, `16-PYTHON-RUNTIME.md`, `17-PYTHON-AUTOMATION-ADAPTERS.md`, and `18-JAVA-RUNTIME.md`.
 

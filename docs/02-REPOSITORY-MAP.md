@@ -19,7 +19,7 @@ Author: Raushan Raj
 | `packages/reporting` | Unified quality aggregation |
 | `packages/security` | Redaction/network policy |
 | `packages/configuration` | Environment-derived configuration |
-| `adapters/runtimes` | Language/runtime discovery, lifecycle and health adapters |
+| `adapters/runtimes` | Language/runtime discovery, lifecycle and health adapters for Python, Java and future runtimes |
 | `adapters/runners` | Test-runner process adapters |
 | `adapters/automation` | Automation-engine capability and executable bridge adapters |
 | `adapters/results` | External result normalization |
