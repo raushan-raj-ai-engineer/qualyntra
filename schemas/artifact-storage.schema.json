@@ -1,0 +1,35 @@
+{
+  "x-file-purpose": "Defines the portable metadata contract for tenant-scoped durable artifacts and retention policy.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qualyntra:schema:artifact-storage",
+  "type": "object",
+  "required": ["id", "scope", "kind", "name", "contentType", "sizeBytes", "sha256", "storageAdapterId", "storageKey", "createdAt"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "scope": {
+      "type": "object",
+      "required": ["organizationId"],
+      "properties": {
+        "organizationId": {"type": "string", "minLength": 1},
+        "workspaceId": {"type": "string", "minLength": 1},
+        "projectId": {"type": "string", "minLength": 1},
+        "environmentId": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "runId": {"type": "string"},
+    "evidenceId": {"type": "string"},
+    "kind": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1, "maxLength": 255},
+    "contentType": {"type": "string", "minLength": 3},
+    "sizeBytes": {"type": "integer", "minimum": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "storageAdapterId": {"type": "string", "minLength": 1},
+    "storageKey": {"type": "string", "minLength": 1},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "retentionUntil": {"type": "string", "format": "date-time"},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

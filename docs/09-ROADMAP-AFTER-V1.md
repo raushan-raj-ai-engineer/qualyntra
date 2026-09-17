@@ -6,7 +6,7 @@ Author: Raushan Raj
 
 # Roadmap After v1.0
 
-- First-class persistent control plane (PostgreSQL/event store/object evidence storage).
+- Continue persistent control-plane scale-out (PostgreSQL is implemented; artifact storage now has local/S3/Azure boundaries; add durable catalog/object-store certification, WORM/legal hold and KMS/BYOK).
 - React/enterprise dashboard implementation.
 - Deep Playwright plugin: trace, storage-state, evidence, generator and healing hooks.
 - Selenium WebDriver/BiDi and Grid execution provider.

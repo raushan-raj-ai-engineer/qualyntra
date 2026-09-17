@@ -20,3 +20,5 @@ export * from './persistence';
 export * from './identity';
 
 export * from './distributed';
+
+export * from './artifact';

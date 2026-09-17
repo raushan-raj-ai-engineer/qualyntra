@@ -58,3 +58,6 @@ These are productization work items, not hidden assumptions. See `10-COMMERCIAL-
 ## Control-plane API
 
 Protected `/api/v1` routes require authentication, explicit tenant context, and governance RBAC. The bootstrap bearer token is environment-supplied and can now be composed with the vendor-neutral OIDC/JWT enterprise authenticator. API requests are body-limited, rate-limited, correlation-tagged, and returned through stack-free error envelopes. Raw run environment values are rejected in favor of secret references.
+## Artifact evidence security
+
+Artifact bytes are addressed only by Qualyntra-generated opaque tenant-scoped keys. Uploads are size-bounded and SHA-256 hashed, metadata is redacted before persistence, verified downloads fail on integrity mismatch, remote stores obey egress policy, and temporary download grants are HTTPS-only and bounded by configured TTL. Cloud credentials/signing remain deployment-owned adapter concerns. See `28-ARTIFACT-STORAGE.md`.

@@ -9,7 +9,7 @@ coverage/
 .env.*
 !.env.example
 .qualyntra/
-artifacts/
+/artifacts/
 reports/
 *.log
 .DS_Store
