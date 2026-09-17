@@ -1,6 +1,6 @@
 /**
  * File: packages/contracts/src/automation.ts
- * Purpose: Defines vendor-neutral automation capabilities, executable plans, commands, and normalized outcomes across language/tool adapters.
+ * Purpose: Defines vendor-neutral automation capabilities, executable plans, mobile session configuration, commands, and normalized outcomes across language/tool adapters.
  * Author: Raushan Raj
  */
 import type { EvidenceRecord } from './evidence';
@@ -18,13 +18,36 @@ export interface AutomationCapabilities {
   storageState:boolean;
 }
 
+export type MobilePlatform='android'|'ios';
+
+export interface MobileSessionConfiguration {
+  platform:MobilePlatform;
+  serverUrl?:string;
+  automationName?:string;
+  deviceName?:string;
+  platformVersion?:string;
+  app?:string;
+  appId?:string;
+  udid?:string;
+  browserName?:string;
+  noReset?:boolean;
+  fullReset?:boolean;
+  headers?:Record<string,string>;
+  capabilities?:Record<string,unknown>;
+  allowExecuteMobile?:boolean;
+  allowUnsafeMobileCommands?:boolean;
+}
+
 export interface LocatorDescriptor {
-  strategy:'role'|'label'|'text'|'testId'|'css'|'xpath'|'accessibilityId'|'custom';
+  strategy:'role'|'label'|'text'|'testId'|'css'|'xpath'|'accessibilityId'|'id'|'className'|'androidUiAutomator'|'iosPredicate'|'iosClassChain'|'custom';
   value:string;
   options?:Record<string,unknown>;
 }
 
-export type AutomationActionType='navigate'|'click'|'fill'|'select'|'check'|'screenshot'|'custom';
+export type AutomationActionType=
+  |'navigate'|'click'|'fill'|'select'|'check'|'screenshot'|'custom'
+  |'tap'|'clear'|'swipe'|'scroll'|'pageSource'
+  |'activateApp'|'terminateApp'|'installApp'|'removeApp'|'executeMobile';
 
 export interface AutomationCommand {
   id:string;
@@ -47,6 +70,7 @@ export interface AutomationPlan {
   tracing?:boolean;
   timeoutMs?:number;
   failFast?:boolean;
+  mobile?:MobileSessionConfiguration;
   commands:AutomationCommand[];
   metadata?:Record<string,unknown>;
 }

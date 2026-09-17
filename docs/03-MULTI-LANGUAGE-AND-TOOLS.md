@@ -37,3 +37,7 @@ The Java integration mirrors the Python architecture: the control plane talks to
 ## Java automation adapters
 
 Java Playwright and Selenium consume the same portable automation plan as Python and return the same normalized result/evidence model. Vendor libraries remain optional execution-project dependencies discovered at runtime. See `docs/19-JAVA-AUTOMATION-ADAPTERS.md`.
+
+## Mobile automation
+
+Appium is integrated through a language-neutral W3C WebDriver/Appium protocol adapter. Android and iOS use the same Qualyntra automation/result/evidence contracts, while platform-specific capabilities remain deployment configuration.
