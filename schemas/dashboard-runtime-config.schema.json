@@ -1,0 +1,22 @@
+{
+  "x-file-purpose": "Defines the non-secret runtime configuration that the dashboard server may expose to browser code.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qualyntra:schema:dashboard-runtime-config:v1",
+  "type": "object",
+  "required": ["apiBase", "defaultScope"],
+  "additionalProperties": false,
+  "properties": {
+    "apiBase": {"type": "string", "const": "/dashboard-api/api/v1"},
+    "defaultScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organizationId": {"type": "string", "minLength": 1},
+        "workspaceId": {"type": "string", "minLength": 1},
+        "projectId": {"type": "string", "minLength": 1},
+        "environmentId": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@ Author: Raushan Raj
 # Roadmap After v1.0
 
 - Continue persistent control-plane scale-out (PostgreSQL is implemented; artifact storage now has local/S3/Azure boundaries; add durable catalog/object-store certification, WORM/legal hold and KMS/BYOK).
-- React/enterprise dashboard implementation.
+- Expand the implemented enterprise dashboard foundation with production OIDC login/BFF session creation, richer read models, visualization/design-system work, and worker/artifact control-plane APIs.
 - Deep Playwright plugin: trace, storage-state, evidence, generator and healing hooks.
 - Selenium WebDriver/BiDi and Grid execution provider.
 - Appium device/cloud provider integrations.

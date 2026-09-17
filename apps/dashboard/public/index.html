@@ -1,0 +1,21 @@
+<!doctype html>
+<!--
+File: apps/dashboard/public/index.html
+Purpose: Provides the semantic, accessible HTML shell for the Qualyntra dashboard single-page application.
+Author: Raushan Raj
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Qualyntra Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div id="app" class="app-shell" aria-busy="true"></div>
+  <noscript>Qualyntra Dashboard requires JavaScript to render the authenticated product interface.</noscript>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

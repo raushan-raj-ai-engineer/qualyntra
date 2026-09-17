@@ -24,7 +24,7 @@ Qualyntra is intentionally designed so the **platform kernel does not depend on 
 - LLM/RAG/agent/tool evaluation engine with native deterministic metrics, single/multi-judge evaluation, custom metrics, reusable datasets/profiles, telemetry and cost/latency-aware regression gates.
 - Optional DeepEval Python bridge that does not make DeepEval a core dependency.
 - TypeScript SDK plus dependency-free Python and Java runtime/SDK boundaries: Python provides Pytest plus Playwright/Selenium automation; Java provides JVM/Javac discovery, optional JUnit/TestNG capabilities, JSON bridge, secure result normalization and evidence hashing; .NET provides contract SDK foundations.
-- CLI, lightweight control-plane HTTP API and static dashboard shell.
+- CLI, authenticated control-plane HTTP API, and secure tenant-aware dashboard/BFF foundation.
 - Playwright compatibility/certification policy so future Playwright releases can be qualified without changing platform core.
 - Security defaults: network egress opt-in, secrets from environment only, redaction utility, audit events, no credential persistence, and vendor-neutral OIDC/JWKS enterprise bearer authentication with tenant-aware claim mapping.
 - Architecture/header/hardcoding/schema/compatibility audits and release validation.
@@ -68,3 +68,7 @@ GitHub, Azure DevOps, Jira, and Jenkins are implemented as secret-referenced, ne
 Qualyntra includes vendor-neutral worker, lease, heartbeat, retry, recovery, and capability-matching contracts for horizontal execution without binding the platform to a specific queue or cluster vendor. See `docs/27-DISTRIBUTED-EXECUTION.md`.
 ## Artifact storage
 Qualyntra stores screenshots, traces, videos, logs, reports, and AI/test evidence behind tenant-scoped storage adapters with streaming SHA-256 integrity, retention, local filesystem support, and SDK-neutral S3/Azure Blob boundaries. See `docs/28-ARTIFACT-STORAGE.md`.
+
+
+## Dashboard foundation
+Qualyntra now includes a responsive TypeScript product dashboard served behind a same-origin BFF. Browser code never receives platform service/vendor credentials; server-side session resolvers authenticate proxied `/api/v1` requests. See `docs/29-DASHBOARD-FOUNDATION.md`.
