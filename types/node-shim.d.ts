@@ -11,3 +11,4 @@ declare module 'node:http' { export function createServer(handler:(req:any,res:a
 declare module 'node:crypto' { export function randomUUID(): string; export function createHash(name:string): any; export function timingSafeEqual(a:any,b:any): boolean; }
 declare const process:any;
 declare const Buffer:any;
+declare const require:any;

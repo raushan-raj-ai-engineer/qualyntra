@@ -37,6 +37,7 @@ export interface RunRecord {
   status:ExecutionStatus;
   createdAt:string;
   updatedAt:string;
+  version:number;
   idempotencyKey?:string;
   requestFingerprint?:string;
 }
@@ -65,6 +66,7 @@ export interface ControlPlaneRepository {
   findRunByIdempotency(scope:TenantScope,key:string):Promise<RunRecord|undefined>;
   getRun(id:string,scope:TenantScope):Promise<RunRecord|undefined>;
   listRuns(scope:TenantScope,page:PageRequest):Promise<PageResponse<RunRecord>>;
+  updateRunStatus(id:string,scope:TenantScope,expectedVersion:number,status:ExecutionStatus):Promise<RunRecord>;
   saveResults(runId:string,scope:TenantScope,results:UniversalTestResult[]):Promise<void>;
   listResults(runId:string,scope:TenantScope,page:PageRequest):Promise<PageResponse<UniversalTestResult>>;
   createEvaluation(record:EvaluationRecord):Promise<EvaluationRecord>;

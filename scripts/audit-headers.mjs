@@ -34,7 +34,7 @@ const ignoredDirectories = new Set([
   'reports',
 ]);
 
-const checkExt = /\.(ts|mjs|py|java|cs|md|yml|yaml|json|toml|csproj)$/;
+const checkExt = /\.(ts|mjs|py|java|cs|md|yml|yaml|json|toml|csproj|sql)$/;
 const failures = [];
 
 function walk(directory) {

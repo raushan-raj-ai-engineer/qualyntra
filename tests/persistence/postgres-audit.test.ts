@@ -1,0 +1,9 @@
+/**
+ * File: tests/persistence/postgres-audit.test.ts
+ * Purpose: Verifies durable audit appends serialize the hash chain and redact sensitive metadata before persistence.
+ * Author: Raushan Raj
+ */
+import test from 'node:test';import assert from 'node:assert/strict';
+import { PostgresAuditLog } from '../../adapters/persistence/postgres/src/audit-log';
+class AuditDb{calls:{text:string;params:unknown[]}[]=[];last:any;async query<T>(text:string,params:unknown[]=[]){this.calls.push({text,params});if(text.startsWith('SELECT *'))return{rows:this.last?[this.last]:[],rowCount:this.last?1:0} as any;return{rows:[],rowCount:0} as any;}async transaction<T>(work:any){const tx={id:'tx',query:async(text:string,params:unknown[]=[]):Promise<any>=>{this.calls.push({text,params});if(text.startsWith('SELECT sequence'))return{rows:this.last?[{sequence:this.last.sequence,hash:this.last.hash}]:[],rowCount:this.last?1:0};if(text.startsWith('INSERT INTO')){this.last={id:params[0],sequence:params[1],timestamp:params[2],actor_id:params[3],action:params[4],resource:params[5],outcome:params[6],correlation_id:params[7],organization_id:params[8],workspace_id:params[9],project_id:params[10],environment_id:params[11],metadata_json:JSON.parse(String(params[12])),previous_hash:params[13],hash:params[14]};return{rows:[],rowCount:1};}return{rows:[],rowCount:0};}};return work(tx);} }
+test('postgres audit log locks chain and redacts secrets before insert',async()=>{const db=new AuditDb();const audit=new PostgresAuditLog(db as any);const record=await audit.append({id:'a1',timestamp:'2026-09-17T00:00:00.000Z',actorId:'u1',action:'run.create',resource:'run:r1',outcome:'succeeded',scope:{organizationId:'o1'},metadata:{apiToken:'hidden',safe:'ok'}});assert.equal(record.sequence,1);assert.equal(record.metadata?.apiToken,'[REDACTED]');assert.match(db.calls[0]!.text,/pg_advisory_xact_lock/);assert.equal(await audit.verify(),true);});

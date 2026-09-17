@@ -6,5 +6,6 @@
 export * from './tenancy';
 export * from './rbac';
 export * from './audit-log';
+export * from './audit-chain';
 export * from './policy';
 export * from './service';

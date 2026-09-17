@@ -45,3 +45,6 @@ Author: Raushan Raj
 
 - `packages/control-plane/` - versioned authenticated tenant-aware REST API, repository contracts, rate limiting, and server factory.
 - `schemas/control-plane-api.openapi.json` - machine-readable `/api/v1` contract.
+
+- `packages/persistence` - vendor-neutral persistence errors and repository conformance.
+- `adapters/persistence/postgres` - optional PostgreSQL driver, repositories, audit store, health checks, and migrations.
