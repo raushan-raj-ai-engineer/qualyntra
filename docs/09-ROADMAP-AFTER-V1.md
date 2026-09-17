@@ -19,6 +19,6 @@ Author: Raushan Raj
 - OpenTelemetry telemetry adapters.
 - Kubernetes/distributed execution agent.
 - Signed plugin marketplace/adapter SDK packaging.
-- Enterprise identity, RBAC, KMS/BYOK, tenancy, audit retention and formal compliance controls.
+- Continue enterprise identity with browser BFF/PKCE and optional SAML/SCIM; RBAC/tenancy and OIDC/JWT API identity are implemented foundations. Add KMS/BYOK, audit retention and formal compliance controls.
 - Package publishing for TypeScript/Python/Java/.NET SDKs.
 

@@ -10,6 +10,7 @@ import type { UniversalTestResult } from './result';
 export interface ApiPrincipal {
   actor:ActorIdentity;
   authenticationMethod:string;
+  identity?:{issuer:string;subject:string;expiresAt:string;tokenId?:string};
 }
 
 export interface ControlPlaneAuthenticator {

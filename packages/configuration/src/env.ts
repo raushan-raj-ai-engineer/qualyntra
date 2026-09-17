@@ -1,21 +1,24 @@
 /**
  * File: packages/configuration/src/env.ts
- * Purpose: Loads runtime and control-plane configuration from environment variables with safe defaults and no embedded credentials.
+ * Purpose: Loads runtime, control-plane, and enterprise-identity configuration from environment variables with safe defaults and no embedded credentials.
  * Author: Raushan Raj
  */
-import type { PlatformConfiguration } from '../../contracts/src/configuration';
+import type { OidcRoleMappingConfiguration,PlatformConfiguration } from '../../contracts/src/configuration';
 function list(value:string|undefined):string[]{ return value?.split(',').map(v=>v.trim()).filter(Boolean)??[]; }
 function bool(value:string|undefined,fallback:boolean):boolean { if(value===undefined)return fallback; return ['1','true','yes','on'].includes(value.toLowerCase()); }
 function integer(value:string|undefined,fallback:number,name:string,min:number,max:number):number{const parsed=Number(value??String(fallback));if(!Number.isInteger(parsed)||parsed<min||parsed>max)throw new Error(`${name} must be an integer between ${min} and ${max}`);return parsed;}
+function optionalInteger(value:string|undefined,name:string,min:number,max:number):number|undefined{if(value===undefined||value.trim()==='')return undefined;return integer(value,0,name,min,max);}
+function roleMappings(value:string|undefined):OidcRoleMappingConfiguration[]{
+  return list(value).map(entry=>{const index=entry.indexOf('=');if(index<1||index===entry.length-1)throw new Error('QUALYNTRA_OIDC_ROLE_MAPPINGS entries must use group=role format');return{group:entry.slice(0,index).trim(),roleId:entry.slice(index+1).trim()};});
+}
 export function loadConfiguration(env:Record<string,string|undefined> = process.env):PlatformConfiguration {
-  const port=integer(env.QUALYNTRA_PORT,4317,'QUALYNTRA_PORT',1,65535);
+  const port=integer(env.QUALYNTRA_PORT,4317,'QUALYNTRA_PORT',1,65535);const issuer=env.QUALYNTRA_OIDC_ISSUER?.trim()||undefined;const audiences=list(env.QUALYNTRA_OIDC_AUDIENCES);
+  if(issuer&&audiences.length===0)throw new Error('QUALYNTRA_OIDC_AUDIENCES is required when QUALYNTRA_OIDC_ISSUER is configured');
+  const algorithms=list(env.QUALYNTRA_OIDC_ALLOWED_ALGORITHMS??'RS256,ES256');if(algorithms.some(item=>!['RS256','ES256'].includes(item)))throw new Error('QUALYNTRA_OIDC_ALLOWED_ALGORITHMS supports RS256 and ES256 only');
   return {
-    host:env.QUALYNTRA_HOST??'127.0.0.1',
-    port,
-    dataDir:env.QUALYNTRA_DATA_DIR??'.qualyntra',
-    logLevel:(env.QUALYNTRA_LOG_LEVEL as PlatformConfiguration['logLevel'])??'info',
-    defaultProvider:env.QUALYNTRA_DEFAULT_PROVIDER??'mock',
+    host:env.QUALYNTRA_HOST??'127.0.0.1',port,dataDir:env.QUALYNTRA_DATA_DIR??'.qualyntra',logLevel:(env.QUALYNTRA_LOG_LEVEL as PlatformConfiguration['logLevel'])??'info',defaultProvider:env.QUALYNTRA_DEFAULT_PROVIDER??'mock',
     security:{network:{allowNetwork:bool(env.QUALYNTRA_ALLOW_NETWORK,false),allowedHosts:list(env.QUALYNTRA_ALLOWED_HOSTS)},redactKeys:list(env.QUALYNTRA_REDACT_KEYS??'authorization,api-key,apikey,token,password,secret'),persistPrompts:bool(env.QUALYNTRA_PERSIST_PROMPTS,false)},
     controlPlane:{maxBodyBytes:integer(env.QUALYNTRA_API_MAX_BODY_BYTES,1_048_576,'QUALYNTRA_API_MAX_BODY_BYTES',1_024,10_485_760),maxPageSize:integer(env.QUALYNTRA_API_MAX_PAGE_SIZE,100,'QUALYNTRA_API_MAX_PAGE_SIZE',1,1000),rateLimitPerMinute:integer(env.QUALYNTRA_API_RATE_LIMIT_PER_MINUTE,120,'QUALYNTRA_API_RATE_LIMIT_PER_MINUTE',1,100_000),corsOrigins:list(env.QUALYNTRA_API_CORS_ORIGINS)},
+    identity:{oidc:{enabled:Boolean(issuer),issuer,audiences,discoveryUrl:env.QUALYNTRA_OIDC_DISCOVERY_URL?.trim()||undefined,allowedAlgorithms:algorithms as Array<'RS256'|'ES256'>,clockSkewSeconds:integer(env.QUALYNTRA_OIDC_CLOCK_SKEW_SECONDS,60,'QUALYNTRA_OIDC_CLOCK_SKEW_SECONDS',0,600),jwksCacheTtlSeconds:integer(env.QUALYNTRA_OIDC_JWKS_CACHE_TTL_SECONDS,300,'QUALYNTRA_OIDC_JWKS_CACHE_TTL_SECONDS',30,86400),requestTimeoutMs:integer(env.QUALYNTRA_OIDC_REQUEST_TIMEOUT_MS,5000,'QUALYNTRA_OIDC_REQUEST_TIMEOUT_MS',100,60000),maxTokenBytes:integer(env.QUALYNTRA_OIDC_MAX_TOKEN_BYTES,16384,'QUALYNTRA_OIDC_MAX_TOKEN_BYTES',1024,131072),maxTokenAgeSeconds:optionalInteger(env.QUALYNTRA_OIDC_MAX_TOKEN_AGE_SECONDS,'QUALYNTRA_OIDC_MAX_TOKEN_AGE_SECONDS',1,604800),acceptedTokenTypes:list(env.QUALYNTRA_OIDC_ACCEPTED_TOKEN_TYPES??'JWT,at+jwt'),requireTokenType:bool(env.QUALYNTRA_OIDC_REQUIRE_TOKEN_TYPE,false),allowInsecureLocalhost:bool(env.QUALYNTRA_OIDC_ALLOW_INSECURE_LOCALHOST,false),groupClaim:env.QUALYNTRA_OIDC_GROUP_CLAIM?.trim()||'groups',organizationClaim:env.QUALYNTRA_OIDC_ORGANIZATION_CLAIM?.trim()||'qualyntra_org',workspaceClaim:env.QUALYNTRA_OIDC_WORKSPACE_CLAIM?.trim()||undefined,projectClaim:env.QUALYNTRA_OIDC_PROJECT_CLAIM?.trim()||undefined,environmentClaim:env.QUALYNTRA_OIDC_ENVIRONMENT_CLAIM?.trim()||undefined,displayNameClaims:list(env.QUALYNTRA_OIDC_DISPLAY_NAME_CLAIMS??'name,preferred_username,email'),serviceSubjects:list(env.QUALYNTRA_OIDC_SERVICE_SUBJECTS),roleMappings:roleMappings(env.QUALYNTRA_OIDC_ROLE_MAPPINGS)}},
   };
 }

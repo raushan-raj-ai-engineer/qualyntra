@@ -19,6 +19,7 @@ Author: Raushan Raj
 | `packages/reporting` | Unified quality aggregation |
 | `packages/ingestion` | Vendor-neutral safe loading, detection, limits, metadata and normalization policy for external results |
 | `packages/security` | Redaction/network policy |
+| `packages/identity` | Vendor-neutral OIDC discovery, JWKS/JWT verification, claim mapping and enterprise authentication |
 | `packages/configuration` | Environment-derived configuration |
 | `adapters/runtimes` | Language/runtime discovery, lifecycle and health adapters for Python, Java and future runtimes |
 | `adapters/runners` | Test-runner process adapters |
