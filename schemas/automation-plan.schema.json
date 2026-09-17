@@ -1,5 +1,5 @@
 {
-  "x-file-purpose": "Validates portable executable automation plans independently of Playwright or Selenium.",
+  "x-file-purpose": "Validates portable web/mobile executable automation plans independently of specific automation engines.",
   "x-author": "Raushan Raj",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
@@ -66,7 +66,17 @@
               "select",
               "check",
               "screenshot",
-              "custom"
+              "custom",
+              "tap",
+              "clear",
+              "swipe",
+              "scroll",
+              "pageSource",
+              "activateApp",
+              "terminateApp",
+              "installApp",
+              "removeApp",
+              "executeMobile"
             ]
           },
           "url": {
@@ -89,7 +99,12 @@
                   "css",
                   "xpath",
                   "accessibilityId",
-                  "custom"
+                  "custom",
+                  "id",
+                  "className",
+                  "androidUiAutomator",
+                  "iosPredicate",
+                  "iosClassChain"
                 ]
               },
               "value": {
@@ -108,6 +123,65 @@
     },
     "metadata": {
       "type": "object"
+    },
+    "mobile": {
+      "type": "object",
+      "required": [
+        "platform"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "serverUrl": {
+          "type": "string"
+        },
+        "automationName": {
+          "type": "string"
+        },
+        "deviceName": {
+          "type": "string"
+        },
+        "platformVersion": {
+          "type": "string"
+        },
+        "app": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "udid": {
+          "type": "string"
+        },
+        "browserName": {
+          "type": "string"
+        },
+        "noReset": {
+          "type": "boolean"
+        },
+        "fullReset": {
+          "type": "boolean"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "allowExecuteMobile": {
+          "type": "boolean"
+        },
+        "allowUnsafeMobileCommands": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }
