@@ -1,0 +1,113 @@
+{
+  "x-file-purpose": "Validates portable executable automation plans independently of Playwright or Selenium.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "runId",
+    "engine",
+    "commands"
+  ],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "engine": {
+      "type": "string",
+      "minLength": 1
+    },
+    "browser": {
+      "type": "string"
+    },
+    "headless": {
+      "type": "boolean"
+    },
+    "baseUrl": {
+      "type": "string"
+    },
+    "remoteUrl": {
+      "type": "string"
+    },
+    "allowRemote": {
+      "type": "boolean"
+    },
+    "artifactDirectory": {
+      "type": "string"
+    },
+    "tracing": {
+      "type": "boolean"
+    },
+    "timeoutMs": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "failFast": {
+      "type": "boolean"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "navigate",
+              "click",
+              "fill",
+              "select",
+              "check",
+              "screenshot",
+              "custom"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "value": {},
+          "locator": {
+            "type": "object",
+            "required": [
+              "strategy",
+              "value"
+            ],
+            "properties": {
+              "strategy": {
+                "enum": [
+                  "role",
+                  "label",
+                  "text",
+                  "testId",
+                  "css",
+                  "xpath",
+                  "accessibilityId",
+                  "custom"
+                ]
+              },
+              "value": {
+                "type": "string"
+              },
+              "options": {
+                "type": "object"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  }
+}

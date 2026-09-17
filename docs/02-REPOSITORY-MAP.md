@@ -21,7 +21,7 @@ Author: Raushan Raj
 | `packages/configuration` | Environment-derived configuration |
 | `adapters/runtimes` | Language/runtime discovery, lifecycle and health adapters |
 | `adapters/runners` | Test-runner process adapters |
-| `adapters/automation` | Automation-engine capability adapters |
+| `adapters/automation` | Automation-engine capability and executable bridge adapters |
 | `adapters/results` | External result normalization |
 | `adapters/llm` | Model providers |
 | `adapters/evaluators` | External evaluator bridges |

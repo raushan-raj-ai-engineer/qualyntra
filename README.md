@@ -23,7 +23,7 @@ Qualyntra is intentionally designed so the **platform kernel does not depend on 
 - Multi-provider LLM platform with logical model aliases, bounded retry/fallback, health and capability routing, normalized telemetry/cost metadata, custom providers, OpenAI Responses/Azure OpenAI/Anthropic/Gemini/Bedrock/Ollama/vLLM adapters, and deterministic mock support.
 - LLM/RAG/agent/tool evaluation engine with native deterministic metrics, single/multi-judge evaluation, custom metrics, reusable datasets/profiles, telemetry and cost/latency-aware regression gates.
 - Optional DeepEval Python bridge that does not make DeepEval a core dependency.
-- TypeScript SDK plus a dependency-free Python runtime/SDK with Pytest execution, runtime discovery, JUnit/evidence normalization and JSON bridge; Java and .NET SDK contracts/examples.
+- TypeScript SDK plus a dependency-free Python runtime/SDK with Pytest execution, runtime discovery, JUnit/evidence normalization, JSON bridge, and interchangeable Playwright-Python/Selenium-Python automation plans; Java and .NET SDK contracts/examples.
 - CLI, lightweight control-plane HTTP API and static dashboard shell.
 - Playwright compatibility/certification policy so future Playwright releases can be qualified without changing platform core.
 - Security defaults: network egress opt-in, secrets from environment only, redaction utility, audit events and no credential persistence.
