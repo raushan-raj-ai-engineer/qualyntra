@@ -1,0 +1,122 @@
+{
+  "x-file-purpose": "Validates normalized evaluation results with metric telemetry for cross-language reporting and release gates.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "caseId",
+    "passed",
+    "metrics",
+    "telemetry",
+    "createdAt"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "metricId",
+          "score",
+          "passed",
+          "reason"
+        ],
+        "properties": {
+          "metricId": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          },
+          "telemetry": {
+            "type": "object",
+            "properties": {
+              "costUsd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "latencyMs": {
+                "type": "number",
+                "minimum": 0
+              },
+              "judgeCalls": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "inputTokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outputTokens": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": [
+        "totalCostUsd",
+        "totalLatencyMs",
+        "maxMetricLatencyMs",
+        "judgeCalls",
+        "inputTokens",
+        "outputTokens"
+      ],
+      "properties": {
+        "totalCostUsd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "totalLatencyMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxMetricLatencyMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "judgeCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "createdAt": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

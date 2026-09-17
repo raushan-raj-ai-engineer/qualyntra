@@ -21,7 +21,7 @@ Qualyntra is intentionally designed so the **platform kernel does not depend on 
 - Automation adapter descriptors for Playwright, Selenium and Appium.
 - Universal result model and JUnit XML ingestion.
 - Multi-provider LLM layer with failover policy, custom provider support, OpenAI-compatible HTTP support, and deterministic mock provider.
-- LLM/RAG/agent/tool evaluation engine with native deterministic metrics, configurable LLM-as-a-judge, custom metrics, datasets and regression gates.
+- LLM/RAG/agent/tool evaluation engine with native deterministic metrics, single/multi-judge evaluation, custom metrics, reusable datasets/profiles, telemetry and cost/latency-aware regression gates.
 - Optional DeepEval Python bridge that does not make DeepEval a core dependency.
 - TypeScript SDK plus Python, Java and .NET SDK contracts/examples.
 - CLI, lightweight control-plane HTTP API and static dashboard shell.
