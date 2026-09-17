@@ -56,3 +56,7 @@ Playwright, Selenium and Pytest remain optional customer/runtime dependencies. Q
 ## Certification
 
 Python/Pytest/Playwright/Selenium versions detected at runtime are compared to the compatibility registry. Empty certification arrays mean **supported integration surface, not certified runtime version**. Qualification evidence must be added before a version can be marketed as certified.
+
+## Browser automation execution
+
+`automation.python-bridge` now sends the same normalized automation plan to either Playwright Python or Selenium Python. Vendor imports are lazy, artifacts are hashed, Selenium remote execution is explicit opt-in, and release tests use injected fake runtimes rather than public websites. See `17-PYTHON-AUTOMATION-ADAPTERS.md`.
