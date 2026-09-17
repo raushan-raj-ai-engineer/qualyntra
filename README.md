@@ -19,7 +19,7 @@ Qualyntra is intentionally designed so the **platform kernel does not depend on 
 - Adapter registry with explicit capability discovery and lifecycle.
 - Process-based runner integrations for Playwright Test, Pytest, JUnit/TestNG, Cypress, WebdriverIO and custom runners.
 - Automation adapter descriptors for Playwright, Selenium and Appium.
-- Universal result model and JUnit XML ingestion.
+- Universal result model plus safe JUnit XML, TRX, Allure JSON, Cucumber JSON, and Robot XML ingestion for low-friction framework onboarding.
 - Multi-provider LLM platform with logical model aliases, bounded retry/fallback, health and capability routing, normalized telemetry/cost metadata, custom providers, OpenAI Responses/Azure OpenAI/Anthropic/Gemini/Bedrock/Ollama/vLLM adapters, and deterministic mock support.
 - LLM/RAG/agent/tool evaluation engine with native deterministic metrics, single/multi-judge evaluation, custom metrics, reusable datasets/profiles, telemetry and cost/latency-aware regression gates.
 - Optional DeepEval Python bridge that does not make DeepEval a core dependency.
