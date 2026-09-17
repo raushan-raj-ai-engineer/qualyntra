@@ -1,0 +1,49 @@
+{
+  "x-file-purpose": "Validates portable LLM/RAG/agent evaluation cases.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "id",
+    "input",
+    "actualOutput"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "input": {
+      "type": "string"
+    },
+    "actualOutput": {
+      "type": "string"
+    },
+    "expectedOutput": {
+      "type": "string"
+    },
+    "context": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "retrievalContext": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "toolsExpected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "toolsUsed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

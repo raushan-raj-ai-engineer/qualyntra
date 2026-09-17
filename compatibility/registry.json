@@ -1,0 +1,34 @@
+{
+  "x-file-purpose": "Tracks certified and candidate versions independently from platform kernel code.",
+  "x-author": "Raushan Raj",
+  "platformVersion": "1.0.0",
+  "tools": {
+    "playwright": {
+      "referenceBaseline": "1.63.0",
+      "certified": [],
+      "candidate": null,
+      "policy": "qualified-before-promotion"
+    },
+    "selenium": {
+      "certified": [],
+      "candidate": null,
+      "policy": "adapter-runtime-owned"
+    },
+    "appium": {
+      "certified": [],
+      "candidate": null,
+      "policy": "adapter-runtime-owned"
+    },
+    "pytest": {
+      "certified": [],
+      "candidate": null,
+      "policy": "sdk-runtime-owned"
+    },
+    "junit": {
+      "certified": [],
+      "candidate": null,
+      "policy": "sdk-runtime-owned"
+    }
+  },
+  "note": "The TestigentAI v1.9.3 reference used Playwright 1.63.0. Qualyntra does not bundle Playwright into its core."
+}

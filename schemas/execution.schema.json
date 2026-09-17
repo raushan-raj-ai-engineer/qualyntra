@@ -1,0 +1,39 @@
+{
+  "x-file-purpose": "Validates portable execution request documents.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "runId",
+    "projectId",
+    "runtime"
+  ],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "language",
+        "runner"
+      ],
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "runner": {
+          "type": "string"
+        },
+        "engine": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

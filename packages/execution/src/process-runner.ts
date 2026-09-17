@@ -1,0 +1,10 @@
+/**
+ * File: packages/execution/src/process-runner.ts
+ * Purpose: Executes external test runners using a normalized process contract and captures deterministic results.
+ * Author: Raushan Raj
+ */
+import { spawn } from 'node:child_process';
+import type { ExecutionRequest, ExecutionResult, RunnerAdapter, RunnerCapabilities } from '../../contracts/src/execution';
+export interface ProcessRunnerOptions { id:string; defaultCommand:string; baseArgs?:string[]; capabilities:RunnerCapabilities; }
+export class ProcessRunnerAdapter implements RunnerAdapter { readonly id:string; constructor(private readonly options:ProcessRunnerOptions){this.id=options.id;} capabilities():RunnerCapabilities{return this.options.capabilities;} async execute(request:ExecutionRequest):Promise<ExecutionResult>{ const startedAt=new Date().toISOString(); const command=request.command??this.options.defaultCommand; const args=[...(this.options.baseArgs??[]),...(request.args??[])]; return await new Promise((resolve)=>{ let stdout='';let stderr='';let settled=false; const child=spawn(command,args,{cwd:request.cwd??process.cwd(),env:{...process.env,...request.env},shell:false}); const timer=request.timeoutMs?setTimeout(()=>{if(!settled){settled=true;child.kill('SIGTERM'); resolve({runId:request.runId,status:'error',startedAt,finishedAt:new Date().toISOString(),stderr:`Execution timed out after ${request.timeoutMs} ms`});}},request.timeoutMs):undefined; child.stdout?.on('data',(d:any)=>stdout+=String(d)); child.stderr?.on('data',(d:any)=>stderr+=String(d)); child.on('error',(err:any)=>{if(settled)return;settled=true;if(timer)clearTimeout(timer);resolve({runId:request.runId,status:'error',startedAt,finishedAt:new Date().toISOString(),stdout,stderr:`${stderr}${err?.message??String(err)}`});}); child.on('close',(code:any)=>{if(settled)return;settled=true;if(timer)clearTimeout(timer);resolve({runId:request.runId,status:code===0?'passed':'failed',exitCode:typeof code==='number'?code:undefined,startedAt,finishedAt:new Date().toISOString(),stdout,stderr});}); }); }}
+

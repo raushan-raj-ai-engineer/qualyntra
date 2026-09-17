@@ -1,0 +1,10 @@
+/**
+ * File: tests/evaluation/evaluation.test.ts
+ * Purpose: Tests native metrics, LLM judge integration, dataset evaluation, gates, and provider failover.
+ * Author: Raushan Raj
+ */
+import test from 'node:test';import assert from 'node:assert/strict';import { EvaluationEngine } from '../../packages/evaluation/src/engine';import { ExactMatchMetric,ToolCorrectnessMetric,RetrievalCoverageMetric } from '../../packages/evaluation/src/metrics';import { LlmJudgeMetric } from '../../packages/evaluation/src/llm-judge';import { MockModelProvider } from '../../adapters/llm/mock/src/index';import { ModelProviderRegistry } from '../../packages/evaluation/src/provider-registry';
+test('native evaluation and regression gate pass',async()=>{const engine=new EvaluationEngine();const cases=[{id:'1',input:'x',actualOutput:'Hello World',expectedOutput:'hello world',toolsExpected:['search'],toolsUsed:['search'],retrievalContext:['hello world fact']}];const results=await engine.evaluateDataset(cases,[new ExactMatchMetric(),new ToolCorrectnessMetric(),new RetrievalCoverageMetric(.5)]);assert.equal(results[0]?.passed,true);assert.equal(engine.gate(results,{id:'g',minPassRate:1}).passed,true);});
+test('llm judge is provider-neutral',async()=>{const judge=new MockModelProvider(()=>'{"score":0.9,"reason":"good"}');const result=await new LlmJudgeMetric('quality','Quality',.8,'Be correct').evaluate({id:'1',input:'q',actualOutput:'a'},{judge});assert.equal(result.passed,true);assert.equal(result.details?.judgeProvider,'mock');});
+test('provider registry falls back after unavailable provider',async()=>{const r=new ModelProviderRegistry();r.register({id:'bad',capabilities:()=>({chat:true,streaming:false,embeddings:false,jsonMode:false,tools:false,multimodal:false}),health:async()=>({status:'unavailable' as const}),generate:async()=>{throw new Error('should not run')}});r.register(new MockModelProvider(()=>'{"ok":true}'));const out=await r.generateWithFailover(['bad','mock'],{messages:[{role:'user',content:'x'}]});assert.equal(out.provider,'mock');});
+

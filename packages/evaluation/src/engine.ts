@@ -1,0 +1,8 @@
+/**
+ * File: packages/evaluation/src/engine.ts
+ * Purpose: Executes evaluation metrics against datasets and applies release regression gates.
+ * Author: Raushan Raj
+ */
+import type { EvaluationCase,EvaluationContext,EvaluationMetric,EvaluationRunResult,RegressionGate } from '../../contracts/src/evaluation';
+export class EvaluationEngine { async evaluate(testCase:EvaluationCase,metrics:EvaluationMetric[],context:EvaluationContext={}):Promise<EvaluationRunResult>{const results=[];for(const metric of metrics)results.push(await metric.evaluate(testCase,context));return {caseId:testCase.id,passed:results.every(r=>r.passed),metrics:results,createdAt:new Date().toISOString()};} async evaluateDataset(cases:EvaluationCase[],metrics:EvaluationMetric[],context:EvaluationContext={}):Promise<EvaluationRunResult[]>{const out=[];for(const c of cases)out.push(await this.evaluate(c,metrics,context));return out;} gate(results:EvaluationRunResult[],gate:RegressionGate):{passed:boolean;passRate:number;reasons:string[]}{const reasons:string[]=[];const passRate=results.length?results.filter(r=>r.passed).length/results.length:0;if(passRate<gate.minPassRate)reasons.push(`Pass rate ${passRate.toFixed(4)} below ${gate.minPassRate.toFixed(4)}`);for(const [metricId,min] of Object.entries(gate.requiredMetrics??{})){const scores=results.flatMap(r=>r.metrics.filter(m=>m.metricId===metricId).map(m=>m.score));const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;if(avg<min)reasons.push(`Metric ${metricId} average ${avg.toFixed(4)} below ${min.toFixed(4)}`);}return {passed:reasons.length===0,passRate,reasons};} }
+

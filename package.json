@@ -1,0 +1,31 @@
+{
+  "x-file-purpose": "Defines the Qualyntra monorepo metadata and local validation commands.",
+  "x-author": "Raushan Raj",
+  "name": "qualyntra-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Qualyntra - vendor-neutral quality engineering and AI evaluation platform.",
+  "author": "Raushan Raj",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/tests/**/*.test.js",
+    "test:unit": "npm run test",
+    "audit:architecture": "node scripts/audit-architecture.mjs",
+    "audit:headers": "node scripts/audit-headers.mjs",
+    "audit:hardcoding": "node scripts/audit-hardcoding.mjs",
+    "audit:schemas": "node scripts/audit-schemas.mjs",
+    "compatibility:check": "node scripts/compatibility-check.mjs",
+    "release:validate": "node scripts/release-validate.mjs",
+    "validate": "npm run typecheck && npm run test && npm run audit:architecture && npm run audit:headers && npm run audit:hardcoding && npm run audit:schemas && npm run compatibility:check",
+    "cli": "node dist/apps/cli/src/main.js",
+    "control-plane": "node dist/apps/control-plane/src/server.js"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

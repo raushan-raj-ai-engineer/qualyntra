@@ -1,0 +1,40 @@
+{
+  "x-file-purpose": "Validates normalized test results from supported and custom runners.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "id",
+    "runId",
+    "name",
+    "status",
+    "durationMs",
+    "runtime"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "skipped",
+        "error"
+      ]
+    },
+    "durationMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "runtime": {
+      "type": "object"
+    }
+  }
+}

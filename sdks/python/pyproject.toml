@@ -1,0 +1,14 @@
+# File: sdks/python/pyproject.toml
+# Purpose: Defines packaging metadata for the Python SDK.
+# Author: Raushan Raj
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qualyntra-sdk"
+version = "1.0.0"
+description = "Qualyntra Python SDK"
+authors = [{name = "Raushan Raj"}]
+requires-python = ">=3.11"

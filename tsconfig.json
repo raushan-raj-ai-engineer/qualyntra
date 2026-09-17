@@ -1,0 +1,32 @@
+{
+  "x-file-purpose": "Configures strict TypeScript compilation for the platform and tests.",
+  "x-author": "Raushan Raj",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": [
+    "apps/**/*.ts",
+    "packages/**/*.ts",
+    "adapters/**/*.ts",
+    "tests/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "sdks"
+  ]
+}
