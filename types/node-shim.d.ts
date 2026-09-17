@@ -4,7 +4,7 @@
  * Author: Raushan Raj
  */
 declare module 'node:child_process' { export function spawn(command:string,args?:string[],options?:any): any; }
-declare module 'node:fs' { export const promises:any; export function readFileSync(path:string,encoding:string):string; export function existsSync(path:string):boolean; }
+declare module 'node:fs' { export const promises:any; export function readFileSync(path:string,encoding:string):string; export function existsSync(path:string):boolean; export function createReadStream(path:string,options?:any):any; }
 declare module 'node:path' { const p:any; export = p; }
 declare module 'node:os' { export function tmpdir(): string; }
 declare module 'node:http' { export function createServer(handler:(req:any,res:any)=>void): any; }

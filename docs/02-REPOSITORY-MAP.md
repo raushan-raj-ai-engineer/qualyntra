@@ -17,6 +17,7 @@ Author: Raushan Raj
 | `packages/evaluation` | Provider-neutral LLM/RAG/agent evaluation, metric registry, judge consensus, telemetry and release gates |
 | `packages/providers` | Vendor-neutral model aliases, routing, retry/fallback, transport, normalized errors, telemetry and cost metadata |
 | `packages/reporting` | Unified quality aggregation |
+| `packages/artifacts` | Tenant-scoped artifact metadata, integrity, retention, grants and storage orchestration |
 | `packages/ingestion` | Vendor-neutral safe loading, detection, limits, metadata and normalization policy for external results |
 | `packages/security` | Redaction/network policy |
 | `packages/identity` | Vendor-neutral OIDC discovery, JWKS/JWT verification, claim mapping and enterprise authentication |
@@ -27,6 +28,7 @@ Author: Raushan Raj
 | `adapters/results` | External result normalization |
 | `adapters/llm` | Model providers |
 | `adapters/evaluators` | External evaluator bridges |
+| `adapters/storage` | Local, S3-compatible, Azure Blob and future object-storage adapters |
 | `adapters/integrations` | Vendor-specific GitHub, Azure DevOps, Jira, Jenkins and future enterprise-system adapters |
 | `sdks/*` | Language-specific contracts, bridges, execution helpers and evidence/result normalization |
 | `compatibility` | Version certification evidence/policy |
@@ -52,3 +54,6 @@ Author: Raushan Raj
 - `adapters/persistence/postgres` - optional PostgreSQL driver, repositories, audit store, health checks, and migrations.
 
 - `packages/distributed/`: vendor-neutral distributed job coordination, worker matching, leases, heartbeats, recovery, and reference queue behavior.
+
+- `packages/artifacts/`: artifact catalog, integrity verification, retention, audited grant and lifecycle services.
+- `adapters/storage/`: local filesystem plus SDK-neutral S3-compatible and Azure Blob object-storage boundaries.

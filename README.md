@@ -66,3 +66,5 @@ GitHub, Azure DevOps, Jira, and Jenkins are implemented as secret-referenced, ne
 
 ## Distributed execution
 Qualyntra includes vendor-neutral worker, lease, heartbeat, retry, recovery, and capability-matching contracts for horizontal execution without binding the platform to a specific queue or cluster vendor. See `docs/27-DISTRIBUTED-EXECUTION.md`.
+## Artifact storage
+Qualyntra stores screenshots, traces, videos, logs, reports, and AI/test evidence behind tenant-scoped storage adapters with streaming SHA-256 integrity, retention, local filesystem support, and SDK-neutral S3/Azure Blob boundaries. See `docs/28-ARTIFACT-STORAGE.md`.
