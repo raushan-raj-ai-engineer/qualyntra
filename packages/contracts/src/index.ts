@@ -13,3 +13,5 @@ export * from './configuration';
 export * from './automation';
 export * from './runtime';
 export * from './provider';
+export * from './governance';
+export * from './integration';

@@ -45,3 +45,7 @@ bash scripts/package-release.sh
 
 See `docs/00-START-HERE.md` first.
 
+
+## Enterprise governance
+
+Qualyntra includes tenant-scoped RBAC, evidence-backed release policies, tamper-evident audit records, secret references, and vendor-neutral integration contracts. See `docs/22-ENTERPRISE-GOVERNANCE.md`.

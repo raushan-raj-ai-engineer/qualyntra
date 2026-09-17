@@ -1,0 +1,25 @@
+{
+  "x-file-purpose": "Defines the vendor-neutral integration request envelope exchanged with enterprise adapters.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Qualyntra Integration Request",
+  "type": "object",
+  "required": ["operation", "scope", "correlationId", "payload"],
+  "properties": {
+    "operation": {"enum": ["publish-status", "create-work-item", "comment", "notify", "custom"]},
+    "correlationId": {"type": "string", "minLength": 1},
+    "scope": {
+      "type": "object",
+      "required": ["organizationId"],
+      "properties": {
+        "organizationId": {"type": "string", "minLength": 1},
+        "workspaceId": {"type": "string", "minLength": 1},
+        "projectId": {"type": "string", "minLength": 1},
+        "environmentId": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "payload": {"type": "object"}
+  },
+  "additionalProperties": false
+}

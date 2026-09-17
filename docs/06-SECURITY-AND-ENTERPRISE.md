@@ -16,6 +16,16 @@ Author: Raushan Raj
 - Adapter health/status separates unavailability from test failure.
 - Local control-plane binds to `127.0.0.1` by default.
 
+### Enterprise governance foundation now implemented
+
+- Tenant-scoped deny-by-default RBAC contracts and services.
+- Evidence-backed release policies with approvals and expiring scoped exceptions.
+- Tamper-evident chained audit records with sensitive metadata redaction.
+- Secret-reference/resolver boundary so raw values stay outside persisted configuration contracts.
+- Vendor-neutral integration contracts through the central adapter registry.
+
+See `22-ENTERPRISE-GOVERNANCE.md`.
+
 ### Required before broad commercial deployment
 
 The v1.0 codebase establishes extension points but production SaaS/on-prem distribution should add independently reviewed implementations for SSO (OIDC/SAML), RBAC/ABAC, tenant isolation, audit-log persistence/WORM options, encryption/KMS/BYOK, retention/deletion policies, signed artifacts, SBOM/provenance, vulnerability scanning, license scanning, backup/restore, HA/DR, rate limiting, API authentication, database migrations and formal threat modeling.

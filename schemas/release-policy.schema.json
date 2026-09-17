@@ -1,0 +1,31 @@
+{
+  "x-file-purpose": "Defines portable release-policy documents for Qualyntra enterprise governance.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Qualyntra Release Policy",
+  "type": "object",
+  "required": ["id", "name", "rules"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "requiredApprovals": {"type": "integer", "minimum": 0},
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "fact", "operator", "severity"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "fact": {"type": "string", "minLength": 1},
+          "operator": {"enum": ["eq", "neq", "gt", "gte", "lt", "lte", "exists"]},
+          "expected": {"type": ["string", "number", "boolean"]},
+          "severity": {"enum": ["block", "review"]}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
