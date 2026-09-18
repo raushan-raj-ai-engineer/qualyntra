@@ -1,0 +1,31 @@
+{
+  "x-file-purpose": "Defines the machine-readable result emitted by live Qualyntra performance and scale certification.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.qualyntra.invalid/performance-scale-certification.schema.json",
+  "title": "Qualyntra Performance and Scale Certification Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ok","profile","startedAt","finishedAt","configuration","scenarios","gates"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "profile": { "enum": ["smoke","standard","stress"] },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "configuration": { "type": "object", "additionalProperties": { "type": ["number","string","boolean"] } },
+    "scenarios": { "type": "object", "additionalProperties": { "type": "object" } },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name","status","violations"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pass","fail"] },
+          "violations": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

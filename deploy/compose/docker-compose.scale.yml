@@ -1,0 +1,14 @@
+# File: deploy/compose/docker-compose.scale.yml
+# Purpose: Overlays the certified HA topology with bounded connection-pool pressure and a high API rate ceiling for repeatable local scale certification.
+# Author: Raushan Raj
+services:
+  control-plane-a:
+    environment:
+      QUALYNTRA_API_RATE_LIMIT_PER_MINUTE: "100000"
+      QUALYNTRA_POSTGRES_MAX_CONNECTIONS: "12"
+      QUALYNTRA_POSTGRES_STATEMENT_TIMEOUT_MS: "15000"
+  control-plane-b:
+    environment:
+      QUALYNTRA_API_RATE_LIMIT_PER_MINUTE: "100000"
+      QUALYNTRA_POSTGRES_MAX_CONNECTIONS: "12"
+      QUALYNTRA_POSTGRES_STATEMENT_TIMEOUT_MS: "15000"
