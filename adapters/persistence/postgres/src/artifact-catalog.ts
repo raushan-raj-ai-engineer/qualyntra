@@ -1,0 +1,20 @@
+/**
+ * File: adapters/persistence/postgres/src/artifact-catalog.ts
+ * Purpose: Persists tenant-scoped artifact metadata in PostgreSQL while leaving artifact bytes behind the storage-adapter boundary.
+ * Author: Raushan Raj
+ */
+import type { ArtifactCatalog,ArtifactRecord } from '../../../../packages/contracts/src/artifact';
+import type { TenantScope } from '../../../../packages/contracts/src/governance';
+import type { PostgresDatabase } from './driver';
+import { exactScopeParams,restoredScope,scopeParams,storedScope } from './scope';
+
+function json<T>(value:unknown):T{return(typeof value==='string'?JSON.parse(value):value) as T;}
+function fromRow(row:any):ArtifactRecord{const record:ArtifactRecord={id:String(row.id),scope:restoredScope(row),kind:row.kind,name:String(row.name),contentType:String(row.content_type),sizeBytes:Number(row.size_bytes),sha256:String(row.sha256),storageAdapterId:String(row.storage_adapter_id),storageKey:String(row.storage_key),createdAt:new Date(row.created_at).toISOString(),metadata:row.metadata_json?json(row.metadata_json):undefined};if(row.run_id)record.runId=String(row.run_id);if(row.evidence_id)record.evidenceId=String(row.evidence_id);if(row.retention_until)record.retentionUntil=new Date(row.retention_until).toISOString();return record;}
+export class PostgresArtifactCatalog implements ArtifactCatalog{
+  constructor(private readonly database:PostgresDatabase){}
+  async save(record:ArtifactRecord):Promise<ArtifactRecord>{const s=storedScope(record.scope);await this.database.query('INSERT INTO qualyntra_artifacts (id,organization_id,workspace_id,project_id,environment_id,run_id,evidence_id,kind,name,content_type,size_bytes,sha256,storage_adapter_id,storage_key,created_at,retention_until,metadata_json) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb)',[record.id,s.organizationId,s.workspaceId,s.projectId,s.environmentId,record.runId??null,record.evidenceId??null,record.kind,record.name,record.contentType,record.sizeBytes,record.sha256,record.storageAdapterId,record.storageKey,record.createdAt,record.retentionUntil??null,JSON.stringify(record.metadata??{})]);return structuredClone(record);}
+  async get(scope:TenantScope,id:string):Promise<ArtifactRecord|undefined>{const result=await this.database.query<any>('SELECT * FROM qualyntra_artifacts WHERE id=$1 AND organization_id=$2 AND workspace_id=$3 AND project_id=$4 AND environment_id=$5 LIMIT 1',[id,...exactScopeParams(scope)]);return result.rows[0]?fromRow(result.rows[0]):undefined;}
+  async list(scope:TenantScope,input:{offset:number;limit:number;runId?:string}){if(input.offset<0||input.limit<1)throw new Error('Artifact pagination requires offset >= 0 and limit >= 1.');const scoped=scopeParams(scope);const where=`${scoped.sql}${input.runId?' AND run_id=$5':''}`;const params=[...scoped.params,...(input.runId?[input.runId]:[])];const total=await this.database.query<any>(`SELECT COUNT(*)::bigint AS total FROM qualyntra_artifacts WHERE ${where}`,params);const limitIndex=params.length+1,offsetIndex=params.length+2;const rows=await this.database.query<any>(`SELECT * FROM qualyntra_artifacts WHERE ${where} ORDER BY created_at DESC,id LIMIT $${limitIndex} OFFSET $${offsetIndex}`,[...params,input.limit,input.offset]);return{items:rows.rows.map(fromRow),offset:input.offset,limit:input.limit,total:Number(total.rows[0]?.total??0)};}
+  async listExpired(now:string,limit:number):Promise<ArtifactRecord[]>{if(limit<1)throw new Error('Retention scan limit must be at least 1.');if(!Number.isFinite(Date.parse(now)))throw new Error('Retention scan timestamp must be valid ISO time.');const result=await this.database.query<any>('SELECT * FROM qualyntra_artifacts WHERE retention_until IS NOT NULL AND retention_until<=$1 ORDER BY retention_until,id LIMIT $2',[now,limit]);return result.rows.map(fromRow);}
+  async delete(scope:TenantScope,id:string):Promise<void>{await this.database.query('DELETE FROM qualyntra_artifacts WHERE id=$1 AND organization_id=$2 AND workspace_id=$3 AND project_id=$4 AND environment_id=$5',[id,...exactScopeParams(scope)]);}
+}

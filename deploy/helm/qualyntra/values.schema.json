@@ -1,0 +1,48 @@
+{
+  "x-file-purpose": "Validates Helm values that affect durable runtime backend selection and PostgreSQL secret references.",
+  "x-author": "Raushan Raj",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "controlPlane": {
+      "type": "object",
+      "properties": {
+        "runtimeBackend": {
+          "type": "object",
+          "required": ["mode", "postgres"],
+          "properties": {
+            "mode": {"type": "string", "enum": ["memory", "postgres"]},
+            "postgres": {
+              "type": "object",
+              "required": ["connectionSecret", "migrateOnStart", "maxConnections", "statementTimeoutMs", "ssl"],
+              "properties": {
+                "connectionSecret": {
+                  "type": "object",
+                  "required": ["name", "key"],
+                  "properties": {
+                    "name": {"type": "string"},
+                    "key": {"type": "string", "minLength": 1}
+                  }
+                },
+                "migrateOnStart": {"type": "boolean"},
+                "maxConnections": {"type": "integer", "minimum": 1, "maximum": 200},
+                "statementTimeoutMs": {"type": "integer", "minimum": 100, "maximum": 300000},
+                "ssl": {"type": "boolean"}
+              },
+              "additionalProperties": true
+            }
+          },
+          "allOf": [
+            {
+              "if": {"properties": {"mode": {"const": "postgres"}}},
+              "then": {"properties": {"postgres": {"properties": {"connectionSecret": {"properties": {"name": {"minLength": 1}}}}}}}
+            }
+          ],
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -9,3 +9,7 @@ export * from './health';
 export * from './migrations';
 export * from './repository';
 export * from './audit-log';
+export * from './distributed-queue';
+export * from './artifact-catalog';
+export * from './telemetry-store';
+export * from './alert-state';

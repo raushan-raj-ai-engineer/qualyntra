@@ -19,6 +19,16 @@ controlPlane:
   agentSecret:
     name: ""
     key: agent-token
+  runtimeBackend:
+    mode: memory
+    postgres:
+      connectionSecret:
+        name: ""
+        key: connection-string
+      migrateOnStart: true
+      maxConnections: 20
+      statementTimeoutMs: 30000
+      ssl: true
   data:
     size: 10Gi
     storageClass: ""

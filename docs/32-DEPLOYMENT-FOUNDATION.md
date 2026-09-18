@@ -52,11 +52,11 @@ The chart includes:
 - optional TLS ingress exposing only the dashboard;
 - service-account token automount disabled.
 
-## Current durability boundary
+## Runtime durability boundary
 
-This milestone packages the existing reference composition; it does not pretend the in-memory distributed queue, telemetry store, alert state, or artifact metadata catalog are production durable. The PostgreSQL persistence adapter already exists for control-plane records, and cloud artifact adapter boundaries already exist, but production composition of all durable backends should be completed in a dedicated durable-runtime-backends milestone before production certification.
+The durable-runtime-backends milestone adds PostgreSQL implementations for the distributed queue, worker registry, artifact metadata catalog, telemetry, and alert state. The deployment still defaults to `QUALYNTRA_RUNTIME_BACKEND=memory` so local/reference startup has no hidden database requirement.
 
-Do not horizontally scale the current reference control-plane stateful composition merely because the chart permits replica configuration. For production HA, wire durable shared queue/catalog/telemetry backends first. The chart therefore defaults the control plane to one replica with its HPA and disruption budget disabled. Those controls remain templated for activation only after durable shared backends are wired.
+Do not horizontally scale the control plane merely because PostgreSQL mode exists. For production HA, configure the shared PostgreSQL backend, include the optional PostgreSQL driver in the runtime image, and use shared artifact-byte storage rather than replica-local filesystem bytes. The chart therefore continues to default the control plane to one replica with its HPA and disruption budget disabled. Those controls may be enabled only after all shared-state conditions documented in `33-DURABLE-RUNTIME-BACKENDS.md` are satisfied.
 
 ## Validation
 

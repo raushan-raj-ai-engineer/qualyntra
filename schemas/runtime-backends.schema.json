@@ -1,0 +1,30 @@
+{
+  "x-file-purpose": "Defines the non-secret durable runtime backend configuration contract for memory or PostgreSQL control-plane state.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qualyntra:schema:runtime-backends:v1",
+  "type": "object",
+  "required": ["mode"],
+  "additionalProperties": false,
+  "properties": {
+    "mode": {"type": "string", "enum": ["memory", "postgres"]},
+    "postgres": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "connectionStringFile": {"type": "string", "minLength": 1},
+        "migrationsDirectory": {"type": "string", "minLength": 1},
+        "migrateOnStart": {"type": "boolean"},
+        "maxConnections": {"type": "integer", "minimum": 1, "maximum": 200},
+        "statementTimeoutMs": {"type": "integer", "minimum": 100, "maximum": 300000},
+        "ssl": {"type": "boolean"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "postgres"}}},
+      "then": {"required": ["postgres"], "properties": {"postgres": {"required": ["connectionStringFile"]}}}
+    }
+  ]
+}
