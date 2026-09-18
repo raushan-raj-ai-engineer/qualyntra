@@ -37,4 +37,14 @@ test('dashboard rejects cross-site browser mutations before resolving upstream',
 
 test('dashboard bounds upstream response bytes before returning them to the browser',async()=>withServer({session:new BootstrapServiceSessionResolver('server-secret'),fetcher:async()=>({status:200,headers:{get:(name:string)=>name==='content-length'?'100':name==='content-type'?'application/json':null},arrayBuffer:async()=>Buffer.from('{}')}),maxProxyResponseBytes:8},async base=>{const response=await fetch(`${base}/dashboard-api/api/v1/runs`,{headers:{'x-qualyntra-organization-id':'org-a'}});assert.equal(response.status,502);const payload:any=await response.json();assert.equal(payload.error.code,'dashboard_error');}));
 
-test('dashboard rejects insecure non-loopback control-plane origins',()=>{assert.throws(()=>createDashboardServer({staticRoot:path.resolve('dist/apps/dashboard/public'),controlPlaneOrigin:'http://example.invalid',sessionResolver:new DisabledDashboardSessionResolver(),fetcher:async()=>({})}),/HTTPS except on localhost/);});
+test('dashboard rejects insecure non-loopback control-plane origins',()=>{assert.throws(()=>createDashboardServer({staticRoot:path.resolve('dist/apps/dashboard/public'),controlPlaneOrigin:'http://example.invalid',sessionResolver:new DisabledDashboardSessionResolver(),fetcher:async()=>({})}),/HTTPS outside localhost unless explicitly enabled for a trusted internal network/);});
+
+test('dashboard permits explicitly opted-in internal HTTP control-plane origins',()=>{
+  assert.doesNotThrow(()=>createDashboardServer({
+    staticRoot:path.resolve('dist/apps/dashboard/public'),
+    controlPlaneOrigin:'http://control-plane:4317',
+    allowInsecureControlPlane:true,
+    sessionResolver:new DisabledDashboardSessionResolver(),
+    fetcher:async()=>({})
+  }));
+});

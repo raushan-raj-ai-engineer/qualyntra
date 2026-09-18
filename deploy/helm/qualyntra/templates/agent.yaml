@@ -1,0 +1,52 @@
+# File: deploy/helm/qualyntra/templates/agent.yaml
+# Purpose: Optionally deploys horizontally scalable execution agents with isolated ephemeral workspaces and least-privilege file-mounted credentials.
+# Author: Raushan Raj
+{{- if .Values.agent.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: {{ .Release.Name }}-agent }
+spec:
+  replicas: {{ .Values.agent.replicas }}
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 1, maxSurge: 1 } }
+  selector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: agent } }
+  template:
+    metadata: { labels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: agent } }
+    spec:
+      serviceAccountName: {{ include "qualyntra.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: agent
+          image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+          env:
+            - { name: QUALYNTRA_AGENT_CONTROL_PLANE_ORIGIN, value: "http://{{ .Release.Name }}-control-plane:{{ .Values.controlPlane.service.port }}" }
+            - { name: QUALYNTRA_AGENT_ALLOW_INSECURE_CONTROL_PLANE, value: "true" }
+            - { name: QUALYNTRA_AGENT_ORGANIZATION_ID, value: {{ .Values.global.organizationId | quote }} }
+            - { name: QUALYNTRA_AGENT_TOKEN_FILE, value: "/run/secrets/qualyntra/agent-token" }
+            - { name: QUALYNTRA_AGENT_RUNNERS, value: {{ join "," .Values.agent.runners | quote }} }
+            - { name: QUALYNTRA_AGENT_LABELS, value: {{ join "," .Values.agent.labels | quote }} }
+            - { name: QUALYNTRA_AGENT_MAX_CONCURRENCY, value: {{ .Values.agent.maxConcurrency | quote }} }
+            - { name: QUALYNTRA_AGENT_DATA_DIR, value: "/opt/qualyntra/data" }
+            - { name: QUALYNTRA_AGENT_WORKSPACE_ROOT, value: "/opt/qualyntra/work" }
+            - { name: QUALYNTRA_AGENT_HEALTH_HOST, value: "0.0.0.0" }
+          ports: [{ name: health, containerPort: 4321 }]
+          startupProbe: { httpGet: { path: /health, port: health }, failureThreshold: 30, periodSeconds: 2 }
+          livenessProbe: { httpGet: { path: /health, port: health }, periodSeconds: 20, timeoutSeconds: 3 }
+          readinessProbe: { httpGet: { path: /ready, port: health }, periodSeconds: 10, timeoutSeconds: 3 }
+          resources: {{- toYaml .Values.agent.resources | nindent 12 }}
+          volumeMounts:
+            - { name: data, mountPath: /opt/qualyntra/data }
+            - { name: work, mountPath: /opt/qualyntra/work }
+            - { name: tmp, mountPath: /tmp }
+            - { name: agent-secret, mountPath: /run/secrets/qualyntra/agent-token, subPath: {{ .Values.controlPlane.agentSecret.key }}, readOnly: true }
+      volumes:
+        - { name: data, emptyDir: {} }
+        - name: work
+          emptyDir: { sizeLimit: {{ .Values.agent.workspaceSizeLimit }} }
+        - { name: tmp, emptyDir: {} }
+        - name: agent-secret
+          secret: { secretName: {{ .Values.controlPlane.agentSecret.name | quote }} }
+{{- end }}

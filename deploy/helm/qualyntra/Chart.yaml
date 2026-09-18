@@ -1,0 +1,9 @@
+# File: deploy/helm/qualyntra/Chart.yaml
+# Purpose: Defines the Qualyntra Helm chart metadata for control-plane, dashboard, and execution-agent deployment.
+# Author: Raushan Raj
+apiVersion: v2
+name: qualyntra
+version: 0.1.0
+appVersion: "1.0.0"
+description: Qualyntra quality engineering and AI evaluation platform deployment chart
+type: application

@@ -1,0 +1,67 @@
+# File: deploy/helm/qualyntra/templates/control-plane.yaml
+# Purpose: Deploys the Qualyntra control plane with probes, non-root security, persistent data, resource limits, and file-mounted credentials.
+# Author: Raushan Raj
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-control-plane
+  labels: { app.kubernetes.io/component: control-plane }
+spec:
+  replicas: {{ .Values.controlPlane.replicas }}
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: control-plane } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: control-plane }
+    spec:
+      serviceAccountName: {{ include "qualyntra.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: control-plane
+          image: "{{ .Values.controlPlane.image.repository }}:{{ .Values.controlPlane.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+          env:
+            - { name: QUALYNTRA_HOST, value: "0.0.0.0" }
+            - { name: QUALYNTRA_PORT, value: "4317" }
+            - { name: QUALYNTRA_DATA_DIR, value: "/var/lib/qualyntra" }
+            - { name: QUALYNTRA_API_ORGANIZATION_ID, value: {{ .Values.global.organizationId | quote }} }
+            - { name: QUALYNTRA_API_TOKEN_FILE, value: "/run/secrets/qualyntra/api-token" }
+            - { name: QUALYNTRA_AGENT_API_ORGANIZATION_ID, value: {{ .Values.global.organizationId | quote }} }
+            - { name: QUALYNTRA_AGENT_API_TOKEN_FILE, value: "/run/secrets/qualyntra/agent-token" }
+          ports: [{ name: http, containerPort: 4317 }]
+          startupProbe: { httpGet: { path: /health, port: http }, failureThreshold: 30, periodSeconds: 2 }
+          livenessProbe: { httpGet: { path: /health, port: http }, periodSeconds: 20, timeoutSeconds: 3 }
+          readinessProbe: { httpGet: { path: /ready, port: http }, periodSeconds: 10, timeoutSeconds: 3 }
+          resources: {{- toYaml .Values.controlPlane.resources | nindent 12 }}
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/qualyntra }
+            - { name: tmp, mountPath: /tmp }
+            - { name: bootstrap-secret, mountPath: /run/secrets/qualyntra/api-token, subPath: {{ .Values.controlPlane.bootstrapSecret.key }}, readOnly: true }
+            - { name: agent-secret, mountPath: /run/secrets/qualyntra/agent-token, subPath: {{ .Values.controlPlane.agentSecret.key }}, readOnly: true }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: {{ .Release.Name }}-control-plane-data }
+        - { name: tmp, emptyDir: {} }
+        - name: bootstrap-secret
+          secret: { secretName: {{ .Values.controlPlane.bootstrapSecret.name | quote }} }
+        - name: agent-secret
+          secret: { secretName: {{ .Values.controlPlane.agentSecret.name | quote }} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: {{ .Release.Name }}-control-plane }
+spec:
+  selector: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: control-plane }
+  ports: [{ name: http, port: {{ .Values.controlPlane.service.port }}, targetPort: http }]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: {{ .Release.Name }}-control-plane-data }
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.controlPlane.data.storageClass }}
+  storageClassName: {{ .Values.controlPlane.data.storageClass | quote }}
+  {{- end }}
+  resources: { requests: { storage: {{ .Values.controlPlane.data.size }} } }

@@ -1,0 +1,46 @@
+# File: deploy/helm/qualyntra/templates/availability.yaml
+# Purpose: Adds disruption budgets and horizontal autoscaling for stateless Qualyntra control-plane and dashboard workloads.
+# Author: Raushan Raj
+{{- if .Values.controlPlane.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: {{ .Release.Name }}-control-plane }
+spec:
+  minAvailable: {{ .Values.controlPlane.pdb.minAvailable }}
+  selector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: control-plane } }
+---
+{{- end }}
+{{- if .Values.dashboard.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: {{ .Release.Name }}-dashboard }
+spec:
+  minAvailable: {{ .Values.dashboard.pdb.minAvailable }}
+  selector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: dashboard } }
+---
+{{- end }}
+{{- if .Values.controlPlane.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: {{ .Release.Name }}-control-plane }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: {{ .Release.Name }}-control-plane }
+  minReplicas: {{ .Values.controlPlane.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.controlPlane.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.controlPlane.autoscaling.cpuUtilization }} } }
+---
+{{- end }}
+{{- if .Values.dashboard.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: {{ .Release.Name }}-dashboard }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: {{ .Release.Name }}-dashboard }
+  minReplicas: {{ .Values.dashboard.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.dashboard.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.dashboard.autoscaling.cpuUtilization }} } }
+{{- end }}

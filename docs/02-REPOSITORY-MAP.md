@@ -67,3 +67,5 @@ Author: Raushan Raj
 - `apps/agent/`: standalone execution-agent composition and non-root Docker packaging.
 - `packages/agent/`: runner-neutral agent configuration, identity, worker protocol, workspaces, secret materialization, telemetry and graceful drain.
 - `schemas/execution-agent-config.schema.json`: non-secret execution-agent deployment configuration contract.
+
+- `deploy/`: container, Compose, and Helm deployment assets with secure defaults.

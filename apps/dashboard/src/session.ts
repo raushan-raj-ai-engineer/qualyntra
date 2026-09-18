@@ -3,7 +3,10 @@
  * Purpose: Defines the server-side dashboard session boundary so browser code never needs control-plane or vendor credentials.
  * Author: Raushan Raj
  */
+import { readSecretFile } from '../../../packages/security/src/file-secret';
+
 export interface DashboardSession { authorization:string; actorId?:string; expiresAt?:string; }
+
 export interface DashboardSessionResolver { resolve(request:any):Promise<DashboardSession|undefined>; }
 
 export class DisabledDashboardSessionResolver implements DashboardSessionResolver{
@@ -16,7 +19,9 @@ export class BootstrapServiceSessionResolver implements DashboardSessionResolver
   async resolve(_request:any):Promise<DashboardSession|undefined>{const token=this.token?.trim();return token?{authorization:`Bearer ${token}`,actorId:this.actorId}:undefined;}
 }
 
+
 export interface DashboardSessionRecord { id:string; authorization:string; actorId?:string; expiresAt:string; }
+
 export interface DashboardSessionStore { get(id:string):Promise<DashboardSessionRecord|undefined>; }
 
 function cookies(headerValue:string|undefined):Record<string,string>{
@@ -34,4 +39,10 @@ export class CookieDashboardSessionResolver implements DashboardSessionResolver{
     if(Date.parse(record.expiresAt)<=Date.now())return undefined;
     return{authorization:record.authorization,actorId:record.actorId,expiresAt:record.expiresAt};
   }
+}
+
+/** Production bootstrap option for file-mounted secrets. Prefer a real cookie/session identity integration for user-facing deployments. */
+export class FileBootstrapServiceSessionResolver implements DashboardSessionResolver{
+  constructor(private readonly tokenFile:string,private readonly actorId='dashboard-bootstrap'){}
+  async resolve(_request:any):Promise<DashboardSession|undefined>{try{const token=await readSecretFile(this.tokenFile);return{authorization:`Bearer ${token}`,actorId:this.actorId};}catch{return undefined;}}
 }

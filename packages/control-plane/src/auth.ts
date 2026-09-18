@@ -4,6 +4,7 @@
  * Author: Raushan Raj
  */
 import { timingSafeEqual } from 'node:crypto';
+import { readSecretFile } from '../../security/src/file-secret';
 import type { ActorIdentity } from '../../contracts/src/governance';
 import type { ApiPrincipal,ControlPlaneAuthenticator } from '../../contracts/src/control-plane';
 
@@ -25,5 +26,15 @@ export class StaticBearerAuthenticator implements ControlPlaneAuthenticator{
     const supplied=bearer(input.authorization);
     if(!supplied||!safeEqual(supplied,this.token!))return undefined;
     return {actor:structuredClone(this.actor!),authenticationMethod:'bearer'};
+  }
+}
+
+export class FileBearerAuthenticator implements ControlPlaneAuthenticator{
+  constructor(private readonly tokenFile:string|undefined,private readonly actor:ActorIdentity|undefined){}
+  configured():boolean{return Boolean(this.tokenFile&&this.actor);}
+  async authenticate(input:{authorization?:string}):Promise<ApiPrincipal|undefined>{
+    if(!this.configured())return undefined;
+    const supplied=bearer(input.authorization);if(!supplied)return undefined;
+    try{const expected=await readSecretFile(this.tokenFile!);if(!safeEqual(supplied,expected))return undefined;return{actor:structuredClone(this.actor!),authenticationMethod:'bearer-file'};}catch{return undefined;}
   }
 }

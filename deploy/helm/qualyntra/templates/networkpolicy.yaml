@@ -1,0 +1,31 @@
+# File: deploy/helm/qualyntra/templates/networkpolicy.yaml
+# Purpose: Applies default-deny pod networking and allows only dashboard-to-control-plane and agent-to-control-plane application traffic.
+# Author: Raushan Raj
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: {{ .Release.Name }}-default-deny }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: {{ .Release.Name }}-application-flows }
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app.kubernetes.io/instance, operator: In, values: [{{ .Release.Name }}] }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }} } }
+  egress:
+    - to:
+        - podSelector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }} } }
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+{{- end }}
