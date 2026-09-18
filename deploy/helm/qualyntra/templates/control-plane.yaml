@@ -26,6 +26,14 @@ spec:
             - { name: QUALYNTRA_HOST, value: "0.0.0.0" }
             - { name: QUALYNTRA_PORT, value: "4317" }
             - { name: QUALYNTRA_DATA_DIR, value: "/var/lib/qualyntra" }
+            - { name: QUALYNTRA_RUNTIME_BACKEND, value: {{ .Values.controlPlane.runtimeBackend.mode | quote }} }
+            {{ if eq .Values.controlPlane.runtimeBackend.mode "postgres" }}
+            - { name: QUALYNTRA_POSTGRES_CONNECTION_STRING_FILE, value: "/run/secrets/qualyntra/postgres-connection" }
+            - { name: QUALYNTRA_POSTGRES_MIGRATE_ON_START, value: {{ .Values.controlPlane.runtimeBackend.postgres.migrateOnStart | quote }} }
+            - { name: QUALYNTRA_POSTGRES_MAX_CONNECTIONS, value: {{ .Values.controlPlane.runtimeBackend.postgres.maxConnections | quote }} }
+            - { name: QUALYNTRA_POSTGRES_STATEMENT_TIMEOUT_MS, value: {{ .Values.controlPlane.runtimeBackend.postgres.statementTimeoutMs | quote }} }
+            - { name: QUALYNTRA_POSTGRES_SSL, value: {{ .Values.controlPlane.runtimeBackend.postgres.ssl | quote }} }
+            {{ end }}
             - { name: QUALYNTRA_API_ORGANIZATION_ID, value: {{ .Values.global.organizationId | quote }} }
             - { name: QUALYNTRA_API_TOKEN_FILE, value: "/run/secrets/qualyntra/api-token" }
             - { name: QUALYNTRA_AGENT_API_ORGANIZATION_ID, value: {{ .Values.global.organizationId | quote }} }
@@ -40,6 +48,9 @@ spec:
             - { name: tmp, mountPath: /tmp }
             - { name: bootstrap-secret, mountPath: /run/secrets/qualyntra/api-token, subPath: {{ .Values.controlPlane.bootstrapSecret.key }}, readOnly: true }
             - { name: agent-secret, mountPath: /run/secrets/qualyntra/agent-token, subPath: {{ .Values.controlPlane.agentSecret.key }}, readOnly: true }
+            {{ if eq .Values.controlPlane.runtimeBackend.mode "postgres" }}
+            - { name: postgres-secret, mountPath: /run/secrets/qualyntra/postgres-connection, subPath: {{ .Values.controlPlane.runtimeBackend.postgres.connectionSecret.key }}, readOnly: true }
+            {{ end }}
       volumes:
         - name: data
           persistentVolumeClaim: { claimName: {{ .Release.Name }}-control-plane-data }
@@ -48,6 +59,10 @@ spec:
           secret: { secretName: {{ .Values.controlPlane.bootstrapSecret.name | quote }} }
         - name: agent-secret
           secret: { secretName: {{ .Values.controlPlane.agentSecret.name | quote }} }
+        {{ if eq .Values.controlPlane.runtimeBackend.mode "postgres" }}
+        - name: postgres-secret
+          secret: { secretName: {{ .Values.controlPlane.runtimeBackend.postgres.connectionSecret.name | quote }} }
+        {{ end }}
 ---
 apiVersion: v1
 kind: Service
@@ -63,5 +78,5 @@ spec:
   accessModes: ["ReadWriteOnce"]
   {{- if .Values.controlPlane.data.storageClass }}
   storageClassName: {{ .Values.controlPlane.data.storageClass | quote }}
-  {{- end }}
+  {{ end }}
   resources: { requests: { storage: {{ .Values.controlPlane.data.size }} } }

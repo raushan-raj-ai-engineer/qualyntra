@@ -1,0 +1,33 @@
+/**
+ * File: tests/persistence/postgres-runtime-backends.test.ts
+ * Purpose: Verifies durable runtime backend SQL uses transactional leases, tenant-scoped metadata, redaction, and atomic alert cooldown claims without requiring a live PostgreSQL server.
+ * Author: Raushan Raj
+ */
+import test from 'node:test';import assert from 'node:assert/strict';import { promises as fs } from 'node:fs';
+import { PostgresDistributedExecutionQueue } from '../../adapters/persistence/postgres/src/distributed-queue';
+import { PostgresArtifactCatalog } from '../../adapters/persistence/postgres/src/artifact-catalog';
+import { PostgresTelemetryStore } from '../../adapters/persistence/postgres/src/telemetry-store';
+import { PostgresAlertStateStore } from '../../adapters/persistence/postgres/src/alert-state';
+
+class ScriptedDb{
+  calls:{text:string;params:unknown[]}[]=[];responses:any[]=[];handler?:((text:string,params:unknown[])=>any);
+  async query<T>(text:string,params:unknown[]=[]){this.calls.push({text,params});return(this.handler?.(text,params)??this.responses.shift()??{rows:[],rowCount:0}) as T as any;}
+  async transaction<T>(work:any){const tx={id:'tx',query:this.query.bind(this)};return work(tx);}
+}
+function workerRow(){return{id:'worker_1',organization_id:'o1',workspace_id:'w1',project_id:'',environment_id:'',capabilities_json:{languages:['typescript'],runners:['playwright-test'],engines:['chromium'],labels:['linux']},max_concurrency:2,state:'online',registered_at:'2026-09-18T00:00:00.000Z',heartbeat_at:'2026-09-18T00:00:05.000Z',active_leases:0,metadata_json:{}};}
+function jobRow(){return{id:'job_1',run_id:'run_1',organization_id:'o1',workspace_id:'w1',project_id:'p1',environment_id:'',request_json:{runId:'run_1',projectId:'p1',runtime:{language:'typescript',runner:'playwright-test',engine:'chromium'}},requirements_json:{language:'typescript',runner:'playwright-test',engine:'chromium',labels:['linux']},state:'queued',attempt:0,max_attempts:2,created_at:'2026-09-18T00:00:00.000Z',updated_at:'2026-09-18T00:00:00.000Z',available_at:'2026-09-18T00:00:00.000Z',metadata_json:{}};}
+
+test('postgres distributed leasing locks worker and uses SKIP LOCKED before claiming compatible work',async()=>{const db=new ScriptedDb();db.handler=(text,params)=>{if(text.startsWith('SELECT * FROM qualyntra_workers'))return{rows:[workerRow()],rowCount:1};if(text.includes('FOR UPDATE SKIP LOCKED'))return{rows:[jobRow()],rowCount:1};if(text.startsWith("UPDATE qualyntra_distributed_jobs SET state='leased'")){return{rows:[{...jobRow(),state:'leased',attempt:1,updated_at:params[1],lease_id:params[2],lease_worker_id:'worker_1',lease_acquired_at:params[1],lease_heartbeat_at:params[1],lease_expires_at:params[4]}],rowCount:1};}return{rows:[],rowCount:1};};const queue=new PostgresDistributedExecutionQueue(db as any);const leased=await queue.leaseNext('worker_1',{now:'2026-09-18T00:00:10.000Z',leaseMs:30_000,workerStaleMs:60_000});assert.equal(leased?.id,'job_1');assert.equal(leased?.state,'leased');const candidate=db.calls.find(call=>call.text.includes('FOR UPDATE SKIP LOCKED'));assert.ok(candidate);assert.deepEqual(candidate!.params.slice(1,5),['o1','w1','','']);assert.equal(db.calls.some(call=>call.text.includes('active_leases=active_leases+1')),true);});
+
+
+test('postgres worker registration refuses reusing a worker id under a different tenant scope',async()=>{const db=new ScriptedDb();const queue=new PostgresDistributedExecutionQueue(db as any);await assert.rejects(()=>queue.registerWorker({id:'worker_1',scope:{organizationId:'o2'},capabilities:{languages:['typescript'],runners:['playwright-test']},maxConcurrency:1,state:'online',registeredAt:'2026-09-18T00:00:00.000Z',heartbeatAt:'2026-09-18T00:00:00.000Z',activeLeases:0}),/scope conflict/);assert.match(db.calls[0]!.text,/WHERE qualyntra_workers\.organization_id=EXCLUDED\.organization_id/);});
+
+test('postgres lease heartbeat fails closed when ownership or expiry predicate does not match',async()=>{const db=new ScriptedDb();const queue=new PostgresDistributedExecutionQueue(db as any);await assert.rejects(()=>queue.heartbeatLease('job_1','lease_1','2026-09-18T00:01:00.000Z',30_000),/mismatch or expired/);assert.match(db.calls[0]!.text,/lease_expires_at>=\$3/);assert.deepEqual(db.calls[0]!.params.slice(0,3),['job_1','lease_1','2026-09-18T00:01:00.000Z']);});
+
+test('postgres artifact catalog keeps exact get/delete scope and hierarchical list parameters',async()=>{const db=new ScriptedDb();const catalog=new PostgresArtifactCatalog(db as any);await catalog.get({organizationId:'o1',workspaceId:'w1',projectId:'p1'},'art_1');assert.deepEqual(db.calls[0]!.params,['art_1','o1','w1','p1','']);db.responses.push({rows:[{total:'0'}],rowCount:1},{rows:[],rowCount:0});await catalog.list({organizationId:'o1',workspaceId:'w1'},{offset:0,limit:20,runId:'run_1'});assert.match(db.calls[1]!.text,/organization_id=\$1/);assert.deepEqual(db.calls[1]!.params,['o1','w1','','','run_1']);assert.deepEqual(db.calls[2]!.params,['o1','w1','','','run_1',20,0]);});
+
+test('postgres telemetry redacts sensitive values before they reach SQL parameters',async()=>{const db=new ScriptedDb();const store=new PostgresTelemetryStore(db as any);await store.emitLog({id:'log_1',timestamp:'2026-09-18T00:00:00.000Z',severity:'info',message:'request',resource:{serviceName:'control-plane'},scope:{organizationId:'o1'},attributes:{token:'super-secret',nested:{password:'hidden'},safe:'visible'}});const serialized=String(db.calls[0]!.params.at(-1));assert.equal(serialized.includes('super-secret'),false);assert.equal(serialized.includes('hidden'),false);assert.equal(serialized.includes('[REDACTED]'),true);});
+
+test('postgres alert cooldown claim is a single atomic upsert with a cooldown predicate',async()=>{const db=new ScriptedDb();db.responses.push({rows:[{state_key:'rule:o1'}],rowCount:1},{rows:[],rowCount:0});const state=new PostgresAlertStateStore(db as any);assert.equal(await state.tryMarkTriggered('rule:o1',1_000_000,60_000),true);assert.equal(await state.tryMarkTriggered('rule:o1',1_010_000,60_000),false);assert.match(db.calls[0]!.text,/ON CONFLICT/);assert.match(db.calls[0]!.text,/last_triggered_at<=\$3/);});
+
+test('runtime backend migration creates durable queue artifact telemetry and alert tables',async()=>{const sql=await fs.readFile('adapters/persistence/postgres/migrations/0003_runtime_backends.sql','utf8');for(const table of ['qualyntra_workers','qualyntra_distributed_jobs','qualyntra_artifacts','qualyntra_telemetry','qualyntra_alert_cooldowns','qualyntra_alert_records'])assert.match(sql,new RegExp(`CREATE TABLE ${table}`));assert.match(sql,/ix_qualyntra_jobs_lease_expiry/);});
