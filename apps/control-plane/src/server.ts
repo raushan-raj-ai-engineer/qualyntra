@@ -3,7 +3,6 @@
  * Purpose: Boots the Qualyntra control-plane API with pluggable durable runtime backends, bootstrap bearer authentication, and optional enterprise OIDC.
  * Author: Raushan Raj
  */
-import path from 'node:path';
 import { loadConfiguration } from '../../../packages/configuration/src/env';
 import { AdapterRegistry } from '../../../packages/core/src/adapter-registry';
 import { RbacAuthorizer,GovernanceService } from '../../../packages/governance/src';
@@ -14,8 +13,8 @@ import { AlertEngine,ObservabilityService } from '../../../packages/observabilit
 import { NotificationService } from '../../../packages/notifications/src';
 import { DistributedExecutionCoordinator } from '../../../packages/distributed/src';
 import { ArtifactService } from '../../../packages/artifacts/src';
-import { LocalArtifactStorageAdapter } from '../../../adapters/storage/local/src';
 import { createControlPlaneRuntimeBackends } from './runtime-backends';
+import { createControlPlaneArtifactStorage } from './artifact-backend';
 
 async function main():Promise<void>{
   const config=loadConfiguration();
@@ -55,16 +54,16 @@ async function main():Promise<void>{
   await distributedCoordinator.recoverExpired();
   const recoveryTimer=setInterval(()=>{void distributedCoordinator.recoverExpired().catch(()=>console.warn('Distributed lease recovery iteration failed.'));},recoveryIntervalMs);(recoveryTimer as any).unref?.();
 
-  const localArtifacts=new LocalArtifactStorageAdapter(path.join(config.dataDir,'artifacts'));
-  registry.register(localArtifacts);
+  const artifactBackend=await createControlPlaneArtifactStorage({dataDir:config.dataDir,networkPolicy:config.security.network});
+  registry.register(artifactBackend.adapter);
   const artifactService=new ArtifactService(registry,backends.artifactCatalog,{...config.artifacts,redactKeys:config.security.redactKeys},backends.audit);
-  const service=new ControlPlaneService(backends.repository,governance,registry,integrations,backends.audit,observability,notifications,{coordinator:distributedCoordinator,queue:backends.distributedQueue},{service:artifactService,storageAdapterId:localArtifacts.descriptor.id});
+  const service=new ControlPlaneService(backends.repository,governance,registry,integrations,backends.audit,observability,notifications,{coordinator:distributedCoordinator,queue:backends.distributedQueue},{service:artifactService,storageAdapterId:artifactBackend.adapter.descriptor.id});
   const rateLimiter=new FixedWindowRateLimiter(config.controlPlane.rateLimitPerMinute);
 
   const server=createControlPlaneServer({
     authenticator,governance,service,rateLimiter,
     options:{maxBodyBytes:config.controlPlane.maxBodyBytes,maxPageSize:config.controlPlane.maxPageSize,corsOrigins:config.controlPlane.corsOrigins},
-    readiness:async()=>{const backendHealth=await backends.health();const artifactHealth=await localArtifacts.health();return{ready:authenticator.configured()&&backendHealth.status==='healthy'&&artifactHealth.status!=='unavailable',checks:{authentication:authenticator.configured()?'configured':'not_configured',oidc:config.identity.oidc.enabled?'configured':'disabled',runtimeBackend:`${backends.mode}:${backendHealth.status}`,repository:backendHealth.status==='healthy'?'ready':'unavailable',distributedExecution:backendHealth.status==='healthy'?'ready':'unavailable',artifactStorage:artifactHealth.status}};},
+    readiness:async()=>{const backendHealth=await backends.health();const artifactHealth=await artifactBackend.adapter.health();return{ready:authenticator.configured()&&backendHealth.status==='healthy'&&artifactHealth.status!=='unavailable',checks:{authentication:authenticator.configured()?'configured':'not_configured',oidc:config.identity.oidc.enabled?'configured':'disabled',runtimeBackend:`${backends.mode}:${backendHealth.status}`,repository:backendHealth.status==='healthy'?'ready':'unavailable',distributedExecution:backendHealth.status==='healthy'?'ready':'unavailable',artifactStorage:`${artifactBackend.mode}:${artifactHealth.status}`}};},
   });
   server.listen(config.port,config.host,()=>console.log(`Qualyntra control plane listening on ${config.host}:${config.port}`));
 

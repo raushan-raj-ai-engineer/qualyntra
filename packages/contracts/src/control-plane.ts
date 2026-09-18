@@ -64,6 +64,7 @@ export interface StoredReleaseDecision {
 
 export interface ControlPlaneRepository {
   createRun(record:RunRecord):Promise<RunRecord>;
+  createRunIdempotently(record:RunRecord):Promise<{record:RunRecord;created:boolean}>;
   findRunByIdempotency(scope:TenantScope,key:string):Promise<RunRecord|undefined>;
   getRun(id:string,scope:TenantScope):Promise<RunRecord|undefined>;
   listRuns(scope:TenantScope,page:PageRequest):Promise<PageResponse<RunRecord>>;

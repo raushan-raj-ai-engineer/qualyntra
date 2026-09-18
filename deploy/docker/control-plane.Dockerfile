@@ -11,7 +11,7 @@ RUN npm run build
 FROM node:22-bookworm-slim AS prod-deps
 WORKDIR /workspace
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && mkdir -p node_modules
+RUN npm ci --omit=dev && npm install --no-save --ignore-scripts pg@8.23.0 @aws-sdk/client-s3@3.1132.0 @aws-sdk/lib-storage@3.1132.0 @aws-sdk/s3-request-presigner@3.1132.0 && mkdir -p node_modules
 
 FROM node:22-bookworm-slim AS runtime
 RUN groupadd --system qualyntra && useradd --system --gid qualyntra --home /opt/qualyntra --create-home qualyntra
