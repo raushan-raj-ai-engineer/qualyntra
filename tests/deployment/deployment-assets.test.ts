@@ -1,0 +1,19 @@
+/**
+ * File: tests/deployment/deployment-assets.test.ts
+ * Purpose: Verifies Qualyntra container and orchestration assets enforce the intended production security and availability baseline.
+ * Author: Raushan Raj
+ */
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+const read=(path:string)=>fs.readFileSync(path,'utf8');
+
+test('control-plane and dashboard images run as non-root users with healthchecks',()=>{for(const file of ['deploy/docker/control-plane.Dockerfile','deploy/docker/dashboard.Dockerfile']){const text=read(file);assert.match(text,/USER qualyntra/);assert.match(text,/HEALTHCHECK/);assert.doesNotMatch(text,/USER root\s*$/m);}});
+test('compose binds public services to loopback and applies container hardening',()=>{const text=read('deploy/compose/docker-compose.yml');assert.match(text,/127\.0\.0\.1:\$\{QUALYNTRA_CONTROL_PLANE_PORT/);assert.match(text,/127\.0\.0\.1:\$\{QUALYNTRA_DASHBOARD_PORT/);assert.equal((text.match(/read_only: true/g)??[]).length,3);assert.equal((text.match(/cap_drop: \["ALL"\]/g)??[]).length,3);assert.equal((text.match(/no-new-privileges:true/g)??[]).length,3);});
+test('compose uses separate least-privilege agent credential',()=>{const text=read('deploy/compose/docker-compose.yml');assert.match(text,/QUALYNTRA_AGENT_API_TOKEN/);assert.match(text,/QUALYNTRA_AGENT_TOKEN: \$\{QUALYNTRA_AGENT_API_TOKEN/);});
+test('Helm workloads use non-root immutable security contexts and probes',()=>{const text=['control-plane.yaml','dashboard.yaml','agent.yaml'].map(f=>read(`deploy/helm/qualyntra/templates/${f}`)).join('\n');for(const token of ['runAsNonRoot: true','readOnlyRootFilesystem: true','allowPrivilegeEscalation: false','capabilities: { drop: ["ALL"] }','startupProbe:','livenessProbe:','readinessProbe:'])assert.match(text,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));});
+test('Helm disables automatic Kubernetes API credential mounts',()=>{const text=read('deploy/helm/qualyntra/templates/serviceaccount.yaml')+read('deploy/helm/qualyntra/templates/control-plane.yaml');assert.match(text,/automountServiceAccountToken: false/);});
+test('Helm includes availability and network isolation controls',()=>{const availability=read('deploy/helm/qualyntra/templates/availability.yaml');assert.match(availability,/policy\/v1/);assert.match(availability,/autoscaling\/v2/);assert.match(availability,/PodDisruptionBudget/);assert.match(availability,/HorizontalPodAutoscaler/);const network=read('deploy/helm/qualyntra/templates/networkpolicy.yaml');assert.match(network,/NetworkPolicy/);assert.match(network,/policyTypes: \[Ingress, Egress\]/);});
+test('Helm ingress exposes dashboard rather than control-plane service',()=>{const text=read('deploy/helm/qualyntra/templates/ingress.yaml');assert.match(text,/dashboard/);assert.doesNotMatch(text,/service: \{ name: .*control-plane/);});
+test('Helm secrets are references rather than embedded credentials',()=>{const values=read('deploy/helm/qualyntra/values.yaml');assert.match(values,/bootstrapSecret:\n\s+name: ""/);assert.match(values,/agentSecret:\n\s+name: ""/);assert.doesNotMatch(values,/token:\s+[A-Za-z0-9_-]{12,}/);});
+test('agent chart is opt-in until a runner-specific image is selected',()=>{const values=read('deploy/helm/qualyntra/values.yaml');assert.match(values,/agent:\n\s+enabled: false/);});
+test('deployment docs disclose reference-store durability limitation',()=>{const text=read('docs/32-DEPLOYMENT-FOUNDATION.md');assert.match(text,/in-memory distributed queue/);assert.match(text,/durable-runtime-backends/);});
+test('control-plane scaling is fail-safe until shared durable stores are composed',()=>{const values=read('deploy/helm/qualyntra/values.yaml');const section=values.split('dashboard:')[0]!;assert.match(section,/controlPlane:[\s\S]*replicas: 1/);assert.match(section,/autoscaling:\n\s+enabled: false/);assert.match(section,/pdb:\n\s+enabled: false/);});

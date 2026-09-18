@@ -1,0 +1,97 @@
+# File: deploy/compose/docker-compose.yml
+# Purpose: Provides a hardened local multi-service deployment topology for the Qualyntra control plane, dashboard, and optional execution agent.
+# Author: Raushan Raj
+services:
+  control-plane:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/control-plane.Dockerfile
+    environment:
+      QUALYNTRA_HOST: 0.0.0.0
+      QUALYNTRA_PORT: 4317
+      QUALYNTRA_DATA_DIR: /var/lib/qualyntra
+      QUALYNTRA_API_TOKEN: ${QUALYNTRA_API_TOKEN:?set QUALYNTRA_API_TOKEN}
+      QUALYNTRA_API_ORGANIZATION_ID: ${QUALYNTRA_API_ORGANIZATION_ID:?set QUALYNTRA_API_ORGANIZATION_ID}
+      QUALYNTRA_AGENT_API_TOKEN: ${QUALYNTRA_AGENT_API_TOKEN:?set QUALYNTRA_AGENT_API_TOKEN}
+      QUALYNTRA_AGENT_API_ORGANIZATION_ID: ${QUALYNTRA_API_ORGANIZATION_ID:?set QUALYNTRA_API_ORGANIZATION_ID}
+      QUALYNTRA_ALLOW_NETWORK: "false"
+    ports:
+      - "127.0.0.1:${QUALYNTRA_CONTROL_PLANE_PORT:-4317}:4317"
+    volumes:
+      - control-plane-data:/var/lib/qualyntra
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4317/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/dashboard.Dockerfile
+    environment:
+      QUALYNTRA_DASHBOARD_HOST: 0.0.0.0
+      QUALYNTRA_DASHBOARD_PORT: 4320
+      QUALYNTRA_DASHBOARD_CONTROL_PLANE_ORIGIN: http://control-plane:4317
+      QUALYNTRA_DASHBOARD_ALLOW_INSECURE_CONTROL_PLANE: "true"
+      QUALYNTRA_DASHBOARD_BOOTSTRAP_TOKEN: ${QUALYNTRA_API_TOKEN:?set QUALYNTRA_API_TOKEN}
+      QUALYNTRA_DASHBOARD_ORGANIZATION_ID: ${QUALYNTRA_API_ORGANIZATION_ID:?set QUALYNTRA_API_ORGANIZATION_ID}
+    depends_on:
+      control-plane:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${QUALYNTRA_DASHBOARD_PORT:-4320}:4320"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid,nodev
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4320/dashboard-health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  agent:
+    profiles: ["agent"]
+    build:
+      context: ../..
+      dockerfile: apps/agent/Dockerfile
+    environment:
+      QUALYNTRA_AGENT_CONTROL_PLANE_ORIGIN: http://control-plane:4317
+      QUALYNTRA_AGENT_ALLOW_INSECURE_CONTROL_PLANE: "true"
+      QUALYNTRA_AGENT_ORGANIZATION_ID: ${QUALYNTRA_API_ORGANIZATION_ID:?set QUALYNTRA_API_ORGANIZATION_ID}
+      QUALYNTRA_AGENT_TOKEN: ${QUALYNTRA_AGENT_API_TOKEN:?set QUALYNTRA_AGENT_API_TOKEN}
+      QUALYNTRA_AGENT_RUNNERS: ${QUALYNTRA_AGENT_RUNNERS:-custom-process}
+      QUALYNTRA_AGENT_CUSTOM_COMMAND: ${QUALYNTRA_AGENT_CUSTOM_COMMAND:-node}
+      QUALYNTRA_AGENT_HEALTH_HOST: 0.0.0.0
+      QUALYNTRA_AGENT_HEALTH_PORT: 4321
+      QUALYNTRA_AGENT_DATA_DIR: /opt/qualyntra/data
+      QUALYNTRA_AGENT_WORKSPACE_ROOT: /opt/qualyntra/work
+      QUALYNTRA_AGENT_MAX_CONCURRENCY: ${QUALYNTRA_AGENT_MAX_CONCURRENCY:-1}
+    depends_on:
+      control-plane:
+        condition: service_healthy
+    volumes:
+      - agent-data:/opt/qualyntra/data
+      - agent-work:/opt/qualyntra/work
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+volumes:
+  control-plane-data:
+  agent-data:
+  agent-work:

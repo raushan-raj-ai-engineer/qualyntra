@@ -16,6 +16,7 @@ export interface DashboardServerOptions{
   fetcher?:(input:any,init?:any)=>Promise<any>;
   maxProxyBodyBytes?:number;
   maxProxyResponseBytes?:number;
+  allowInsecureControlPlane?:boolean;
   defaultScope?:DashboardScopeDefaults;
 }
 
@@ -34,7 +35,7 @@ const PASSTHROUGH_RESPONSE_HEADERS=['content-type','content-length','location','
 function setSecurityHeaders(res:any):void{for(const [key,value] of Object.entries(SECURITY_HEADERS))res.setHeader(key,value);}
 function json(res:any,status:number,body:unknown,headers:Record<string,string>={}):void{res.statusCode=status;res.setHeader('content-type','application/json; charset=utf-8');res.setHeader('cache-control','no-store');for(const [key,value] of Object.entries(headers))res.setHeader(key,value);res.end(JSON.stringify(body));}
 function contentType(name:string):string{return name.endsWith('.html')?'text/html; charset=utf-8':name.endsWith('.css')?'text/css; charset=utf-8':name.endsWith('.js')?'text/javascript; charset=utf-8':name.endsWith('.map')?'application/json; charset=utf-8':'application/octet-stream';}
-function normalizeOrigin(raw:string):URL{const value=new URL(raw);if(!['http:','https:'].includes(value.protocol))throw new Error('Dashboard control-plane origin must use HTTP or HTTPS.');if(value.username||value.password||value.pathname!=='/'||value.search||value.hash)throw new Error('Dashboard control-plane origin must not include credentials, path, query, or fragment.');if(value.protocol==='http:'&&!['127.0.0.1','localhost','::1'].includes(value.hostname))throw new Error('Dashboard control-plane origin must use HTTPS except on localhost.');return value;}
+function normalizeOrigin(raw:string,allowInsecure=false):URL{const value=new URL(raw);if(!['http:','https:'].includes(value.protocol))throw new Error('Dashboard control-plane origin must use HTTP or HTTPS.');if(value.username||value.password||value.pathname!=='/'||value.search||value.hash)throw new Error('Dashboard control-plane origin must not include credentials, path, query, or fragment.');const local=['127.0.0.1','localhost','::1'].includes(value.hostname);if(value.protocol==='http:'&&!local&&!allowInsecure)throw new Error('Dashboard control-plane origin must use HTTPS outside localhost unless explicitly enabled for a trusted internal network.');return value;}
 async function body(req:any,max:number):Promise<Uint8Array|undefined>{if(['GET','HEAD'].includes(req.method??'GET'))return undefined;const chunks:any[]=[];let bytes=0;for await(const chunk of req){const value=Buffer.from(chunk);bytes+=value.byteLength;if(bytes>max)throw Object.assign(new Error('Dashboard proxy request exceeds configured body limit.'),{statusCode:413});chunks.push(value);}return chunks.length?Buffer.concat(chunks):undefined;}
 function requestHeaders(req:any,authorization:string):Record<string,string>{const result:Record<string,string>={authorization};for(const name of PASSTHROUGH_REQUEST_HEADERS){const value=req.headers?.[name];if(typeof value==='string'&&value)result[name]=value;}return result;}
 function proxyPath(url:URL):string|undefined{const prefix='/dashboard-api';if(!url.pathname.startsWith(`${prefix}/`))return undefined;const pathValue=url.pathname.slice(prefix.length);if(!pathValue.startsWith('/api/v1/')&&pathValue!=='/api/v1/health'&&pathValue!=='/api/v1/ready')return undefined;return `${pathValue}${url.search}`;}
@@ -42,7 +43,7 @@ function enforceBrowserMutationOrigin(req:any):void{if(!['POST','PUT','PATCH','D
 async function boundedUpstreamBody(upstream:any,max:number):Promise<any>{const declared=Number(upstream.headers?.get?.('content-length')??'0');if(Number.isFinite(declared)&&declared>max)throw Object.assign(new Error('Control-plane response exceeds dashboard proxy limit.'),{statusCode:502});if(upstream.body&&typeof upstream.body[Symbol.asyncIterator]==='function'){const chunks:any[]=[];let bytes=0;for await(const chunk of upstream.body){const value=Buffer.from(chunk);bytes+=value.byteLength;if(bytes>max)throw Object.assign(new Error('Control-plane response exceeds dashboard proxy limit.'),{statusCode:502});chunks.push(value);}return Buffer.concat(chunks);}const value=Buffer.from(await upstream.arrayBuffer());if(value.byteLength>max)throw Object.assign(new Error('Control-plane response exceeds dashboard proxy limit.'),{statusCode:502});return value;}
 
 export function createDashboardServer(options:DashboardServerOptions){
-  const origin=normalizeOrigin(options.controlPlaneOrigin);const fetcher=options.fetcher??(globalThis as any).fetch;const maxBody=options.maxProxyBodyBytes??1_048_576;const maxResponse=options.maxProxyResponseBytes??10_485_760;
+  const origin=normalizeOrigin(options.controlPlaneOrigin,options.allowInsecureControlPlane===true);const fetcher=options.fetcher??(globalThis as any).fetch;const maxBody=options.maxProxyBodyBytes??1_048_576;const maxResponse=options.maxProxyResponseBytes??10_485_760;
   if(typeof fetcher!=='function')throw new Error('Dashboard server requires a fetch implementation.');
   return createServer((req:any,res:any)=>{void(async()=>{
     setSecurityHeaders(res);

@@ -22,3 +22,6 @@ Author: Raushan Raj
 - Continue enterprise identity with browser BFF/PKCE and optional SAML/SCIM; RBAC/tenancy and OIDC/JWT API identity are implemented foundations. Add KMS/BYOK, audit retention and formal compliance controls.
 - Package publishing for TypeScript/Python/Java/.NET SDKs.
 
+## Deployment foundation
+
+Container/Compose/Helm packaging is established; durable shared queue/catalog/telemetry composition remains before production certification.

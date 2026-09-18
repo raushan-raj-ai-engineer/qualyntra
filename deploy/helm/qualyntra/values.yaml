@@ -1,0 +1,77 @@
+# File: deploy/helm/qualyntra/values.yaml
+# Purpose: Provides secure deployment defaults and operator-configurable image, scaling, storage, ingress, and secret references.
+# Author: Raushan Raj
+global:
+  imagePullPolicy: IfNotPresent
+  organizationId: ""
+  serviceAccountName: ""
+
+controlPlane:
+  image:
+    repository: qualyntra/control-plane
+    tag: "1.0.0"
+  replicas: 1
+  service:
+    port: 4317
+  bootstrapSecret:
+    name: ""
+    key: api-token
+  agentSecret:
+    name: ""
+    key: agent-token
+  data:
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests: { cpu: 250m, memory: 256Mi }
+    limits: { cpu: "1", memory: 1Gi }
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 6
+    cpuUtilization: 70
+  pdb:
+    enabled: false
+    minAvailable: 1
+
+dashboard:
+  image:
+    repository: qualyntra/dashboard
+    tag: "1.0.0"
+  replicas: 2
+  service:
+    port: 4320
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    cpuUtilization: 70
+  pdb:
+    enabled: true
+    minAvailable: 1
+
+agent:
+  enabled: false
+  image:
+    repository: qualyntra/agent
+    tag: "1.0.0"
+  replicas: 1
+  runners: []
+  labels: []
+  maxConcurrency: 1
+  workspaceSizeLimit: 4Gi
+  resources:
+    requests: { cpu: 500m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+networkPolicy:
+  enabled: true
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tlsSecretName: ""
