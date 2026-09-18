@@ -1,0 +1,124 @@
+# File: deploy/compose/docker-compose.ha.yml
+# Purpose: Runs two Qualyntra control-plane replicas against shared PostgreSQL and S3-compatible Moto services for live HA certification.
+# Author: Raushan Raj
+services:
+  postgres:
+    image: postgres:18.6-bookworm
+    environment:
+      POSTGRES_DB: qualyntra
+      POSTGRES_USER: qualyntra
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qualyntra -d qualyntra"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+    restart: unless-stopped
+
+  s3:
+    image: motoserver/moto:5.2.3
+    environment:
+      MOTO_PORT: 5000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket;s=socket.create_connection(('127.0.0.1',5000),2);s.close()"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "127.0.0.1:15000:5000"
+    restart: unless-stopped
+
+  control-plane-a:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/control-plane.Dockerfile
+    environment: &control-plane-ha-env
+      QUALYNTRA_HOST: 0.0.0.0
+      QUALYNTRA_PORT: 4317
+      QUALYNTRA_RUNTIME_BACKEND: postgres
+      QUALYNTRA_POSTGRES_CONNECTION_STRING_FILE: /run/secrets/postgres_connection_string
+      QUALYNTRA_POSTGRES_MIGRATE_ON_START: "true"
+      QUALYNTRA_POSTGRES_SSL: "false"
+      QUALYNTRA_POSTGRES_MAX_CONNECTIONS: 20
+      QUALYNTRA_RUNTIME_RECOVERY_INTERVAL_MS: 5000
+      QUALYNTRA_API_TOKEN_FILE: /run/secrets/api_token
+      QUALYNTRA_API_ORGANIZATION_ID: ha-cert-org
+      QUALYNTRA_AGENT_API_TOKEN_FILE: /run/secrets/agent_token
+      QUALYNTRA_AGENT_API_ORGANIZATION_ID: ha-cert-org
+      QUALYNTRA_ARTIFACT_STORAGE_BACKEND: s3
+      QUALYNTRA_S3_ENDPOINT: http://s3:5000
+      QUALYNTRA_S3_BUCKET: qualyntra-ha
+      QUALYNTRA_S3_REGION: us-east-1
+      QUALYNTRA_S3_ACCESS_KEY_FILE: /run/secrets/s3_access_key
+      QUALYNTRA_S3_SECRET_KEY_FILE: /run/secrets/s3_secret_key
+      QUALYNTRA_S3_FORCE_PATH_STYLE: "true"
+      QUALYNTRA_S3_ENSURE_BUCKET: "true"
+      QUALYNTRA_ALLOW_NETWORK: "true"
+      QUALYNTRA_ALLOWED_HOSTS: s3:5000
+    secrets: &control-plane-ha-secrets
+      - api_token
+      - agent_token
+      - postgres_connection_string
+      - s3_access_key
+      - s3_secret_key
+    depends_on:
+      postgres: { condition: service_healthy }
+      s3: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:14317:4317"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+      - /var/lib/qualyntra:size=128m,nosuid,nodev
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4317/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  control-plane-b:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/control-plane.Dockerfile
+    environment: *control-plane-ha-env
+    secrets: *control-plane-ha-secrets
+    depends_on:
+      postgres: { condition: service_healthy }
+      s3: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:14318:4317"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+      - /var/lib/qualyntra:size=128m,nosuid,nodev
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4317/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+secrets:
+  api_token:
+    file: ./.ha-secrets/api-token
+  agent_token:
+    file: ./.ha-secrets/agent-token
+  postgres_password:
+    file: ./.ha-secrets/postgres-password
+  postgres_connection_string:
+    file: ./.ha-secrets/postgres-connection-string
+  s3_access_key:
+    file: ./.ha-secrets/s3-access-key
+  s3_secret_key:
+    file: ./.ha-secrets/s3-secret-key

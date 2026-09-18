@@ -24,6 +24,7 @@ export class InMemoryControlPlaneRepository implements ControlPlaneRepository{
   private readonly decisions=new Map<string,StoredReleaseDecision>();
 
   async createRun(record:RunRecord):Promise<RunRecord>{if(this.runs.has(record.id))throw new Error(`Run already exists: ${record.id}`);this.runs.set(record.id,clone(record));return clone(record);}
+  async createRunIdempotently(record:RunRecord):Promise<{record:RunRecord;created:boolean}>{if(!record.idempotencyKey)return{record:await this.createRun(record),created:true};const prior=await this.findRunByIdempotency(record.scope,record.idempotencyKey);if(prior)return{record:prior,created:false};this.runs.set(record.id,clone(record));return{record:clone(record),created:true};}
   async findRunByIdempotency(scope:TenantScope,key:string):Promise<RunRecord|undefined>{for(const record of this.runs.values())if(record.idempotencyKey===key&&sameScope(scope,record.scope))return clone(record);return undefined;}
   async getRun(id:string,scope:TenantScope):Promise<RunRecord|undefined>{const record=this.runs.get(id);return record&&visible(scope,record.scope)?clone(record):undefined;}
   async listRuns(scope:TenantScope,request:PageRequest):Promise<PageResponse<RunRecord>>{const items=[...this.runs.values()].filter(item=>visible(scope,item.scope)).sort((a,b)=>a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id));return page(items,request);}

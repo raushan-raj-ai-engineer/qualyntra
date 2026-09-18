@@ -1,0 +1,18 @@
+{
+  "x-file-purpose": "Defines the operator-supplied endpoints and secret-file references used by live HA runtime certification.",
+  "x-author": "Raushan Raj",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.qualyntra.invalid/ha-runtime-certification.schema.json",
+  "title": "Qualyntra HA Runtime Certification Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "controlPlaneA": { "type": "string", "format": "uri" },
+    "controlPlaneB": { "type": "string", "format": "uri" },
+    "organizationId": { "type": "string", "minLength": 1 },
+    "apiTokenFile": { "type": "string", "minLength": 1 },
+    "postgresImage": { "type": "string", "const": "postgres:18.6-bookworm" },
+    "s3CertificationImage": { "type": "string", "const": "motoserver/moto:5.2.3" }
+  },
+  "required": ["controlPlaneA","controlPlaneB","organizationId","apiTokenFile"]
+}

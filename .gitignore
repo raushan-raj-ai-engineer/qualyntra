@@ -18,3 +18,4 @@ __pycache__/
 target/
 bin/
 obj/
+/deploy/compose/.ha-secrets/
